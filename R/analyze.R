@@ -1,17 +1,17 @@
 # dustyboxcox----
 #' @title dustyboxcox
-#' @description Short description of fun
-#' @param x x
-#' @return the result of fun
+#' @description Transforms x according to the Box-Cox formula, using the parameter lambda
+#' @param x A vector of numeric values
+#' @param lambda lambda
+#' @return A vector of transformed values
+#' @details to do
 #' @examples
 #' #to do
 #' @export
-dustyboxcox <- function(x){
-
-
-
+dustyboxcox <- function(x, lambda) {
+  if (lambda == 0) return(log(x))
+  else return((x^lambda - 1) / lambda)
 }
-
 
 # multicheck----
 #' @title multicheck
