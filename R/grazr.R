@@ -4,15 +4,16 @@
 #' @name grazr
 #'
 
+usethis::use_package("DescTools", type = "Imports")
 usethis::use_package("tcltk2", type = "Imports")
+usethis::use_package("nortest", type = "Imports")
+
 
 #usethis::use_package("svglite", type = "Imports")
 #usethis::use_package("pander", type = "Imports")
 #usethis::use_package("ggplot2", type = "Imports")
 #usethis::use_package("stats", type = "Imports")
-#usethis::use_package("DescTools", type = "Imports")
 #usethis::use_package("scales", type = "Imports")
-#usethis::use_package("nortest", type = "Imports")
 #usethis::use_package("car", type = "Imports")
 #usethis::use_package("corrplot", type = "Imports")
 #usethis::use_package("Rmisc", type = "Imports")
