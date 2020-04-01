@@ -1,7 +1,7 @@
 # dustyboxcox----
 #' @title dustyboxcox
 #' @description Transforms x according to the Box-Cox formula, using the parameter lambda
-#' @param x A vector of numeric values
+#' @param df A vector of numeric values
 #' @param lambda lambda
 #' @return A vector of transformed values
 #' @details to do
@@ -9,8 +9,20 @@
 #' #to do
 #' @export
 dustyboxcox <- function(x, lambda) {
-  if (lambda == 0) return(log(x))
-  else return((x^lambda - 1) / lambda)
+  #preparation of dataset: removal of Na, NaN, Inf and -Inf
+  Mydf <- data.frame(x)
+  InfRemoved <- Mydf[!is.infinite(rowSums(Mydf)),]
+  NaRemoved <- na.omit(InfRemoved)
+
+  #data translation
+  data.translation <- function(y) {
+    Translated <- y + min(y) + 1
+    return(Translated)
+  }
+  ReadyForBoxcox <- plyr::colwise(data.translation)(data.frame(NaRemoved))
+  #boxcox transformation
+  if (lambda == 0) return(log(ReadyForBoxcox))
+  else return((ReadyForBoxcox^lambda - 1) / lambda)
 }
 
 # multicheck----
@@ -51,14 +63,14 @@ multicheck <- function(df, y, check.anderson = TRUE, check.anova = TRUE, check.b
   # pvalue ANOVA
   if (check.anova == TRUE) {
     for (i in 1:length(colnames(df))) {
-      P.ANOVA[i] <- oneway.test(formula = df[, i] ~ y, data = df, subset = NULL, na.action = "na.omit")$p.value
+      P.ANOVA[i] <- stats::oneway.test(formula = df[, i] ~ y, data = df, subset = NULL, na.action = "na.omit")$p.value
     }
   }
 
   # pvalue kruskal-wallis
   if(check.kruskal == TRUE) {
     for (i in 1:length(colnames(df))) {
-      P.KRUSKAL[i] <- kruskal.test(df[, i] ~ y)$p.value
+      P.KRUSKAL[i] <- stats::kruskal.test(df[, i] ~ y)$p.value
     }
   }
 
