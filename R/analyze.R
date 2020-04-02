@@ -1,14 +1,14 @@
-# dustyboxcox----
+# grazr.boxcox----
 #' @title dustyboxcox
 #' @description Transforms x according to the Box-Cox formula, using the parameter lambda
-#' @param df A vector of numeric values
+#' @param df A vector or a dataframe of numeric values
 #' @param lambda lambda
 #' @return A vector of transformed values
 #' @details to do
 #' @examples
 #' #to do
 #' @export
-dustyboxcox <- function(x, lambda) {
+grazr.boxcox <- function(x, lambda) {
   #preparation of dataset: removal of Na, NaN, Inf and -Inf
   Mydf <- data.frame(x)
   InfRemoved <- Mydf[!is.infinite(rowSums(Mydf)),]
@@ -23,6 +23,60 @@ dustyboxcox <- function(x, lambda) {
   #boxcox transformation
   if (lambda == 0) return(log(ReadyForBoxcox))
   else return((ReadyForBoxcox^lambda - 1) / lambda)
+}
+
+# grazr.classify----
+#' @title grazr.classify
+#' @description Classify variables by their ability to discriminate categories
+#' @param df A vector or a dataframe of numeric values
+#' @return the result of fun
+#' @examples
+#' #to do
+#' @export
+grazr.arrange <- function(df, y, is.parametric = TRUE, method = "p.value"){
+
+  #BEFORE, check data structure
+  if (is.data.frame(df) == FALSE) stop("Dataframe df should be an object of class data.frame (see 'is.data.frame')")
+  if (is.factor(y) == FALSE) stop("Category variable 'y' is not a factor")
+  if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
+
+  #1 Data transformation
+  Variables <- c(colnames(df))
+  Mydf <- data.frame(as.factor(y), df)
+  Mydf <- stats::na.omit(Mydf)
+
+  #2A Compute ANOVA's F & P
+  if (is.parametric == TRUE) {
+    compute.aov <- function(x, y){
+      Myaov <- stats::oneway.test(x ~ y)
+      F_AOV <- as.numeric(Myaov$statistic)
+      P_AOV <- Myaov$p.value
+      return(c(F_AOV, P_AOV))
+    }
+    Stats <- t(plyr::colwise(compute.stats)(Mydf[,-1], y = Mydf[, 1]))
+    Stats <- data.frame(variable = rownames(Stats), F_stat = Stats[, 1], p.value = Stats[, 2], row.names = NULL)
+  }
+
+  #2B Compute Kruskal's K & P
+  if (is.parametric == FALSE) {
+    compute.ktest <- function(x, y){
+      Myktest <- stats::kruskal.test(x ~ y)
+      K_KTEST <- as.numeric(Myktest$statistic)
+      P_KTEST <- Myktest$p.value
+      return(c(K_KTEST, P_KTEST))
+    }
+    Stats <- t(plyr::colwise(compute.ktest)(Mydf[,-1], y = Mydf[, 1]))
+    Stats <- data.frame(variable = rownames(Stats), K_stat = Stats[, 1], p.value = Stats[, 2], row.names = NULL)
+  }
+
+  #3 Arrange variables by selected method
+  if (method == "statistic") Stats <- plyr::arrange(Stats, plyr::desc(Stats[, 2]))
+  if (method == "p.value") Stats <- plyr::arrange(Stats, Stats[, 3])
+
+  #4 Gestion de la priorité de groupe?
+  #to do
+
+  return(Stats)
 }
 
 # multicheck----
@@ -142,21 +196,6 @@ multicheck <- function(df, y, check.anderson = TRUE, check.anova = TRUE, check.b
 #' #to do
 #' @export
 rm.outliers <- function(x){
-
-
-
-}
-
-
-# topgrazr----
-#' @title topgrazr
-#' @description Short description of fun
-#' @param x x
-#' @return the result of fun
-#' @examples
-#' #to do
-#' @export
-topgrazr <- function(x, method = P){
 
 
 
