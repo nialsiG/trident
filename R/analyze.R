@@ -1,77 +1,111 @@
-# grazr.boxcox----
-#' @title dustyboxcox
+# trident.boxcox----
+#' @title trident.boxcox
 #' @description Transforms x according to the Box-Cox formula, using the parameter lambda
 #' @param df A vector or a dataframe of numeric values
-#' @param lambda lambda
-#' @return A vector of transformed values
+#' @param y A factor
+#' @param list.lambda Logical, if TRUE the list of lambda values is added to the results
+#' @return A list containing a dataframe of the transformed values
 #' @details to do
 #' @examples
 #' #to do
 #' @export
-grazr.boxcox <- function(x, lambda) {
-  #preparation of dataset: removal of Na, NaN, Inf and -Inf
-  Mydf <- data.frame(x)
-  InfRemoved <- Mydf[!is.infinite(rowSums(Mydf)),]
-  NaRemoved <- na.omit(InfRemoved)
+trident.boxcox <- function(df, y, list.lambda = FALSE) {
+  #BEFORE, check data structure:
+  if (is.data.frame(df) == FALSE) stop("Dataframe df should be an object of class data.frame (see 'is.data.frame')")
+  if (is.factor(y) == FALSE) stop("Category variable 'y' is not a factor")
+  if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
 
-  #data translation
-  data.translation <- function(y) {
-    Translated <- y + min(y) + 1
-    return(Translated)
+  #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
+  Mydf <- data.frame(as.factor(y), df)
+  Mydf <- Mydf[!is.infinite(rowSums(Mydf[, -1])),]
+  Mydf <- stats::na.omit(Mydf)
+
+  #Data translation above zero:
+  data.translation <- function(x) return(x - min(x) + 1)
+  Mydf[, -1] <- plyr::colwise(data.translation)(data.frame(Mydf[, -1]))
+
+  #Boucle de transformation BoxCox:
+  Myboxcox <- Mydf[, -1]
+  Mylambda <- NULL
+  for(i in c(1:ncol(Mydf[, -1]))) {
+    #Lambda evaluation on a large range first:
+    aov_k <- stats::formula(Mydf[, i + 1] ~ Mydf[, 1])
+    bc1 <- MASS::boxcox(aov_k, lambda = seq(-5, 5, 1./100), data = Mydf, plotit = FALSE)
+    #NOTE: routine de départ explorait entre -6 et 6, mais la plupart des boxcox supposent un lambda entre -5 et 5, ce qui semble suffisant
+    #Refine lambda values with a smaller range:
+    range_lambda <- range(bc1$x[bc1$y > max(bc1$y) - qchisq(0.95, 1) / 2] )
+    range_lambda <- seq(range_lambda[1], range_lambda[2], 1./100)
+    bc2 <- MASS::boxcox(aov_k, lambda = range_lambda, data = Mydf, plotit = FALSE)
+    #Determine lambda:
+    range_lambda <- range(bc2$x[bc2$y > max(bc2$y) - qchisq(0.95, 1) / 2] )
+    Mylambda[i] <- round(mean(range_lambda), digits = 1)
+    #Boxcox transformation:
+    if (Mylambda[i] == 0) Myboxcox[, i] <- log(Mydf[, i + 1])
+    else Myboxcox[, i] <- (Mydf[, i + 1] ^ Mylambda[i] - 1) / Mylambda[i]
   }
-  ReadyForBoxcox <- plyr::colwise(data.translation)(data.frame(NaRemoved))
-  #boxcox transformation
-  if (lambda == 0) return(log(ReadyForBoxcox))
-  else return((ReadyForBoxcox^lambda - 1) / lambda)
+  Results <- list()
+  Results$boxcox <- Myboxcox
+  if (list.lambda == TRUE) Results$lambda <- Mylambda
+  return(Results)
 }
 
-# grazr.classify----
-#' @title grazr.classify
+# trident.arrange----
+#' @title trident.arrange
 #' @description Classify variables by their ability to discriminate categories
 #' @param df A vector or a dataframe of numeric values
 #' @return the result of fun
 #' @examples
 #' #to do
 #' @export
-grazr.arrange <- function(df, y, is.parametric = TRUE, method = "p.value"){
+trident.arrange <- function(df, y, by = "p.value", method = "lsd"){
 
   #BEFORE, check data structure
   if (is.data.frame(df) == FALSE) stop("Dataframe df should be an object of class data.frame (see 'is.data.frame')")
   if (is.factor(y) == FALSE) stop("Category variable 'y' is not a factor")
   if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
 
-  #1 Data transformation
-  Variables <- c(colnames(df))
+  #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
   Mydf <- data.frame(as.factor(y), df)
+  Mydf <- Mydf[!is.infinite(rowSums(Mydf[, -1])),]
   Mydf <- stats::na.omit(Mydf)
 
   #2A Compute ANOVA's F & P
-  if (is.parametric == TRUE) {
     compute.aov <- function(x, y){
       Myaov <- stats::oneway.test(x ~ y)
       F_AOV <- as.numeric(Myaov$statistic)
       P_AOV <- Myaov$p.value
       return(c(F_AOV, P_AOV))
     }
-    Stats <- t(plyr::colwise(compute.stats)(Mydf[,-1], y = Mydf[, 1]))
-    Stats <- data.frame(variable = rownames(Stats), F_stat = Stats[, 1], p.value = Stats[, 2], row.names = NULL)
-  }
+
+    AOV <- t(plyr::colwise(compute.aov)(Mydf[,-1], y = Mydf[, 1]))
+    AOV <- data.frame(variable = rownames(AOV), F_stat = AOV[, 1], p.value = AOV[, 2], row.names = NULL)
 
   #2B Compute Kruskal's K & P
-  if (is.parametric == FALSE) {
     compute.ktest <- function(x, y){
       Myktest <- stats::kruskal.test(x ~ y)
       K_KTEST <- as.numeric(Myktest$statistic)
       P_KTEST <- Myktest$p.value
       return(c(K_KTEST, P_KTEST))
     }
-    Stats <- t(plyr::colwise(compute.ktest)(Mydf[,-1], y = Mydf[, 1]))
-    Stats <- data.frame(variable = rownames(Stats), K_stat = Stats[, 1], p.value = Stats[, 2], row.names = NULL)
-  }
+    K <- t(plyr::colwise(compute.ktest)(Mydf[,-1], y = Mydf[, 1]))
+    K <- data.frame(variable = rownames(K), K_stat = K[, 1], p.value = K[, 2], row.names = NULL)
+
+    #2C Compute HSD's p-value
+    compute.aov <- function(x, y){
+      Myaov <- stats::oneway.test(x ~ y)
+      Myhsd <-
+#      F_AOV <- as.numeric(Myaov$statistic)
+#      P_AOV <- Myaov$p.value
+      return(c(F_AOV, P_AOV))
+    }
+
+    HSD <- t(plyr::colwise(compute.aov)(Mydf[,-1], y = Mydf[, 1]))
+    HSD <- data.frame(variable = rownames(AOV), F_stat = AOV[, 1], p.value = AOV[, 2], row.names = NULL)
+
 
   #3 Arrange variables by selected method
-  if (method == "statistic") Stats <- plyr::arrange(Stats, plyr::desc(Stats[, 2]))
-  if (method == "p.value") Stats <- plyr::arrange(Stats, Stats[, 3])
+  if (method == "aov") Stats <- plyr::arrange(Stats, plyr::desc(Stats[, 2]))
+  if (method == "k") Stats <- plyr::arrange(Stats, Stats[, 3])
 
   #4 Gestion de la priorité de groupe?
   #to do

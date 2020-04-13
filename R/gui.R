@@ -1,16 +1,16 @@
 # Graphical User Interface----
-#' @title grazr
-#' @description Open the grazr graphical user interface.
+#' @title trident
+#' @description Open the trident graphical user interface.
 #' @export
-grazr <- function(){
+trident <- function(){
   # Tcltk Objects: Metadata----
   METADATA <- list(VERSION = '0.1.0', DESCRIPTION = "Dusty Sandbox")
   # Tkgui Main Window----
   WIN <<- tcltk::tktoplevel()
   tcltk::tkconfigure(WIN, borderwidth = 10, width = 300, bg = "tan")
   tcltk2::tk2theme(theme = "radiance")
-  tcltk::tkwm.title(WIN, paste("grazr", METADATA$VERSION))
-  tcltk2::tk2ico.setFromFile(WIN, system.file("extdata","pics","mini_grazr.ico", package = "grazr"))
+  tcltk::tkwm.title(WIN, paste("trident", METADATA$VERSION))
+  tcltk2::tk2ico.setFromFile(WIN, system.file("extdata","pics","mini_grazr.ico", package = "trident"))
   # Basic layout:
   WIN$MENU <- tcltk2::tk2menu(WIN)
   tcltk::tkconfigure(WIN, menu = WIN$MENU)
@@ -34,6 +34,8 @@ grazr <- function(){
   tcltk::tkadd(WIN$MENU, "cascade", label = "File", menu = WIN$FILE)
 
 
+  # Menu 'Edit'----
+  # Menu 'Options'----
   # Notetab 'collect'----
   WIN$NOTEBOOK$VIS <- tcltk2::tk2notetab(WIN$NOTEBOOK, "Collect")
 
@@ -62,4 +64,8 @@ grazr <- function(){
 
 
 
+
+  # Wrapping----
+  tcltk::tcl("wm", "attributes", WIN, topmost = TRUE)
+  tcltk::tcl("wm", "attributes", WIN, topmost = FALSE)
   }
