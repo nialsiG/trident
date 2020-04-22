@@ -11,7 +11,7 @@ trident.boxcox(df, y, list.lambda = FALSE)
 
 \item{y}{A factor}
 
-\item{lislt.lambda}{Logical, if TRUE the list of lambda values is added to the results}
+\item{list.lambda}{Logical, if TRUE the list of lambda values is added to the results}
 }
 \value{
 A list containing a dataframe of the transformed values

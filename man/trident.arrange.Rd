@@ -4,7 +4,7 @@
 \alias{trident.arrange}
 \title{trident.arrange}
 \usage{
-trident.arrange(df, y, by = "p.value", method = "lsd")
+trident.arrange(df, y, by = "mean.hsd.p.value", gp.priority = NULL)
 }
 \arguments{
 \item{df}{A vector or a dataframe of numeric values}
