@@ -7,14 +7,14 @@ trident <- function(){
   METADATA <- list(VERSION = '0.1.0', DESCRIPTION = "Dusty Sandbox")
   # Tkgui Main Window----
   WIN <<- tcltk::tktoplevel()
-  tcltk::tkconfigure(WIN, borderwidth = 10, width = 300, bg = "tan")
+  tcltk::tkconfigure(WIN, borderwidth = 10, bg = "tan")
   tcltk2::tk2theme(theme = "radiance")
   tcltk::tkwm.title(WIN, paste("trident", METADATA$VERSION))
   tcltk2::tk2ico.setFromFile(WIN, system.file("extdata","pics","mini_grazr.ico", package = "trident"))
   # Basic layout:
   WIN$MENU <- tcltk2::tk2menu(WIN)
   tcltk::tkconfigure(WIN, menu = WIN$MENU)
-  WIN$NOTEBOOK <- tcltk2::tk2notebook(WIN, tabs = c("Microwear", "Data", "Organize", "Visualize", "Batch analysis"))
+  WIN$NOTEBOOK <- tcltk2::tk2notebook(WIN, height = 90, tabs = c("Microwear", "Data", "Organize", "Visualize", "Batch analysis"))
   tcltk::tkpack(WIN$NOTEBOOK, side = "left", fill = "both" , expand = TRUE)
 
 
@@ -26,24 +26,30 @@ trident <- function(){
   WIN$NOTEBOOK$DAT <- tcltk2::tk2notetab(WIN$NOTEBOOK, "Data")
   # Create buttons
   OPEN.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$DAT, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","open.gif", package = "trident")), width = 50, height = 50, command = function(){})
-  IMPORT.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$DAT, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  BUILD.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$DAT, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","build.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  IMPORT.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$DAT, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","import.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  REMOVE.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$DAT, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","rm.gif", package = "trident")), width = 50, height = 50, command = function(){})
+
   # Grid all
-  tcltk::tkgrid(OPEN.BTN, IMPORT.BTN,
+  tcltk::tkgrid(OPEN.BTN,
                 tcltk2::tk2separator(WIN$NOTEBOOK$DAT, orientation = "vertical"),
+                BUILD.BTN, IMPORT.BTN, REMOVE.BTN,
                 padx = 5, pady = 5, sticky = "ns")
   # Tooltips
   tcltk2::tk2tip(OPEN.BTN, "Open...")
+  tcltk2::tk2tip(BUILD.BTN, "Build new dataset...")
   tcltk2::tk2tip(IMPORT.BTN, "Import variable...")
+  tcltk2::tk2tip(REMOVE.BTN, "Remove variable...")
 
 
 
   # Notetab 'Organize'----
   WIN$NOTEBOOK$ORG <- tcltk2::tk2notetab(WIN$NOTEBOOK, "Organize")
   # Create buttons
-  NORM.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
-  HOMO.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
-  MULTI.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
-  BOXCOX.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  NORM.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","norm.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  VARHOMO.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","varhomo.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  MULTI.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","multicheck.gif", package = "trident")), width = 50, height = 50, command = function(){})
+  BOXCOX.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","boxcox.gif", package = "trident")), width = 50, height = 50, command = function(){})
   ASSIGN.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
   OUTLIERS.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
   PVAL.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
@@ -52,7 +58,7 @@ trident <- function(){
   AUTOTOP.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","top3.gif", package = "trident")), width = 50, height = 50, command = function(){})
   CLASSBY.BTN <- tcltk::tkbutton(WIN$NOTEBOOK$ORG, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), width = 50, height = 50, command = function(){})
   # Grid all
-  tcltk::tkgrid(NORM.BTN, HOMO.BTN, MULTI.BTN,
+  tcltk::tkgrid(NORM.BTN, VARHOMO.BTN, MULTI.BTN,
                 tcltk2::tk2separator(WIN$NOTEBOOK$ORG, orientation = "vertical"),
                 BOXCOX.BTN, OUTLIERS.BTN, ASSIGN.BTN,
                 tcltk2::tk2separator(WIN$NOTEBOOK$ORG, orientation = "vertical"),
@@ -62,7 +68,7 @@ trident <- function(){
                 padx = 5, pady = 5, sticky = "ns")
   # Tooltips
   tcltk2::tk2tip(NORM.BTN, "Normality?")
-  tcltk2::tk2tip(HOMO.BTN, "Homoscedasticity?")
+  tcltk2::tk2tip(VARHOMO.BTN, "Homoscedasticity?")
   tcltk2::tk2tip(MULTI.BTN, "Multicheck...")
   tcltk2::tk2tip(BOXCOX.BTN, "Boxcox transformation...")
   tcltk2::tk2tip(ASSIGN.BTN, "Assign to families...")
