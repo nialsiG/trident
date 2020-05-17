@@ -60,7 +60,7 @@ trident <- function(){
     if (is.null(WIN$FRAME) == FALSE) tcltk::tkdestroy(WIN$FRAME)
     WIN$FRAME <<- tcltk2::tk2frame(WIN)
     table.cmd(MyTable, WIN$FRAME)
-    tcltk::tkpack(WIN$FRAME, side = "bottom")
+    tcltk::tkpack(WIN$FRAME, side = "top", expand = TRUE)
   }
   # Tkgui Main Window----
   WIN <<- tcltk::tktoplevel()
@@ -71,8 +71,8 @@ trident <- function(){
   # Basic layout:
   WIN$MENU <- tcltk2::tk2menu(WIN)
   tcltk::tkconfigure(WIN, menu = WIN$MENU)
-  WIN$NOTEBOOK <- tcltk2::tk2notebook(WIN, height = 90, tabs = c("Microwear", "Data", "Organize", "Visualize", "Batch analysis"))
-  tcltk::tkpack(WIN$NOTEBOOK, side = "top", fill = "both" , expand = TRUE)
+  WIN$NOTEBOOK <- tcltk2::tk2notebook(WIN, height = 80, tabs = c("Microwear", "Data", "Organize", "Visualize", "Batch analysis"))
+  tcltk::tkpack(WIN$NOTEBOOK, side = "top", fill = "both" , expand = FALSE)
   WIN$FRAME <- NULL
 
   # Notetab 'Microwear'----

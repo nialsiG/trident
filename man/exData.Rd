@@ -4,7 +4,7 @@
 \name{exData}
 \alias{exData}
 \title{exData}
-\format{An object of class \code{data.frame} with 60 rows and 18 columns.}
+\format{An object of class \code{data.frame} with 60 rows and 17 columns.}
 \usage{
 exData
 }
