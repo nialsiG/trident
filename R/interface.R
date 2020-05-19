@@ -62,10 +62,10 @@ trident.gui <- function(){
   # TKGUI - MAIN WINDOW
   # Window----
   WIN <<- tcltk::tktoplevel()
+  tcltk2::tk2theme(theme = "radiance")
   tcltk::tkconfigure(WIN, borderwidth = 10, bg = "tan")
   tcltk::tkwm.title(WIN, paste("trident", METADATA$VERSION, "-", METADATA$DESCRIPTION))
   tcltk2::tk2ico.setFromFile(WIN, system.file("extdata","pics","mini_grazr.ico", package = "trident"))
-  tcltk2::tk2theme(theme = "radiance")
   #################################################################
 
   #################################################################
@@ -135,35 +135,50 @@ trident.gui <- function(){
   # ...Create buttons
   OPEN.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","open.gif", package = "trident")), height = 50, relief = "flat",
                               text = "Open", compound = "top", command = function(){
+                                # ...Open the file and read it with 'tibble'
                                 File.tmp <- tcltk::tk_choose.files(filters = matrix(c("Calc", "R file", "Text", "All files", ".csv", ".txt", ".R", "*"), ncol = 2))
-                                if (tools::file_ext(File.tmp) == "txt") PROJECT$MYFILE <<- tibble::as_tibble(read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL))
-                                if (tools::file_ext(File.tmp) == "csv") PROJECT$MYFILE <<- tibble::as_tibble(read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL))
+                                n <- length(PROJECT$MYFILE) +1
+                                # REMARQUE: Utiliser les fonctions du package 'readr' à la place de 'read.table' ?
+                                if (tools::file_ext(File.tmp) == "txt") PROJECT$MYFILE[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL))
+                                if (tools::file_ext(File.tmp) == "csv") PROJECT$MYFILE[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL))
                                 if (is.null(PROJECT$MYDATASET) == FALSE) {
+                                  # ...a window to choose whether the current dataset must be replaced
                                   WIN3 <- tcltk::tktoplevel()
+                                  # ...Yes
                                   YES.BTN <- tcltk::tkbutton(WIN3, text = "Yes", command = function() {
-                                    PROJECT$MYDATASET <<- PROJECT$MYFILE
+                                    PROJECT$MYDATASET <<- PROJECT$MYFILE[[n]]
                                     tcltk::tkdestroy(WIN3)
                                   })
+                                  # ...No
                                   NO.BTN <- tcltk::tkbutton(WIN3, text = "No", command = function() {tcltk::tkdestroy(WIN3)})
                                   tcltk::tkgrid(tcltk::tklabel(WIN3, text = "Do you want to replace current dataset?"))
                                   tcltk::tkgrid(YES.BTN, NO.BTN, padx = 5, pady = 5, sticky = "ns")
                                 }
-                                if (is.null(PROJECT$MYDATASET) == TRUE) PROJECT$MYDATASET <<- PROJECT$MYFILE
+                                # ...Display dataset in the adequate frame
+                                if (is.null(PROJECT$MYDATASET) == TRUE) PROJECT$MYDATASET <<- PROJECT$MYFILE[[n]]
                                 if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
                                 WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
                                 build.table.cmd(PROJECT$MYDATASET, WIN$TABLE1)
                                 tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
                               })
   BUILD.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","build.gif", package = "trident")), height = 50, relief = "flat",
-                               text = "Build", compound = "top", command = function(){tcltk::tkmessageBox(message = "hello world")})
+                               text = "Build", compound = "top", command = function(){})
   COMBINE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","combine.gif", package = "trident")), height = 50, relief = "flat",
-                               text = "Combine", compound = "top", command = function(){tcltk::tkmessageBox(message = "hello world")})
+                               text = "Combine", compound = "top", command = function(){})
   IMPORT.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","import.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Import", compound = "top", command = function(){})
   REMOVE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","rm.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Remove", compound = "top", command = function(){})
+  # ...Create menubuttons
+  # .......Transformations:
+  TRANS.MBTN <- tcltk::tkmenubutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","transform.gif", package = "trident")), height = 50, relief = "flat",
+                                    text = "Transform", compound = "top")
+  TRANS.MENU <- tcltk::tkmenu(TRANS.MBTN)
+  tcltk::tkconfigure(TRANS.MBTN, menu = TRANS.MENU)
+  tcltk::tkadd(TRANS.MENU, "command", label = "Boxcox transformation...", command = function(){})
+  tcltk::tkadd(TRANS.MENU, "command", label = "Remove outliers...", command = function(){})
   # ...Grid all
-  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, IMPORT.BTN, REMOVE.BTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, IMPORT.BTN, REMOVE.BTN, TRANS.MBTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
   tcltk2::tk2tip(OPEN.BTN, "Open data...")
   tcltk2::tk2tip(BUILD.BTN, "Build new dataset...")
@@ -187,7 +202,30 @@ trident.gui <- function(){
   NONDISC.BTN <- tcltk::tkbutton(NOTEBOOK$STATS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","nondiscrim.gif", package = "trident")), height = 50, relief = "flat",
                               text = "Non-discriminant", compound = "top", command = function(){})
   MULTI.BTN <- tcltk::tkbutton(NOTEBOOK$STATS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","multicheck.gif", package = "trident")), height = 50, relief = "flat",
-                              text = "Multicheck", compound = "top", command = function(){})
+                              text = "Multicheck", compound = "top", command = function(){
+                                # ...a window to select the variables x and the factor y
+                                WIN2 <- tcltk::tktoplevel()
+                                NumVar <- NULL
+                                FacVar <- NULL
+                                LABELS <- colnames(PROJECT$MYDATASET)
+                                #MyList <- tcltk::tk_select.list(choices = LABELS, preselect = NULL, multiple = TRUE, title = "Choose variables")
+                                NUMVARLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "multiple", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                FACVARLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                # ...buttons
+                                OK.BTN <- tcltk2::tk2button(WIN2, text = "OK", command = function(){
+                                  NumVar <<- tcltk2::selection(NUMVARLIST)
+                                  FacVar <<- tcltk2::selection(FACVARLIST)
+
+                                  tcltk::tkdestroy(WIN2)
+                                  tcltk::tkmessageBox(message = c("Numeric variables selected:\n", paste(LABELS[NumVar], "\n"), "Factorial variable selected:\n", paste(LABELS[FacVar], "\n")))
+                                })
+                                CANCEL.BTN <- tcltk2::tk2button(WIN2, text = "Cancel", command = function() tcltk::tkdestroy(WIN2))
+                                # ...grid all
+                                tcltk::tkgrid(tcltk::tklabel(WIN2, text = "Choose numeric variables"), tcltk::tklabel(WIN2, text = "Choose factor"))
+                                tcltk::tkgrid(NUMVARLIST, FACVARLIST)
+                                tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+
+                              })
   # ...Grid all
   tcltk::tkgrid(NORM.BTN, HOMO.BTN, SUM.BTN, PVAL.BTN, DISC.BTN, NONDISC.BTN, MULTI.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
@@ -195,13 +233,6 @@ trident.gui <- function(){
   # Notetab 'Variables'----
   NOTEBOOK$VARIA <- tcltk2::tk2notetab(NOTEBOOK, "Variables")
   # ...Create menubuttons
-  # .......Transformations:
-  TRANS.MBTN <- tcltk::tkmenubutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","transform.gif", package = "trident")), height = 50, relief = "flat",
-                              text = "Transform", compound = "top")
-  TRANS.MENU <- tcltk::tkmenu(TRANS.MBTN)
-  tcltk::tkconfigure(TRANS.MBTN, menu = TRANS.MENU)
-  tcltk::tkadd(TRANS.MENU, "command", label = "Boxcox transformation...", command = function(){})
-  tcltk::tkadd(TRANS.MENU, "command", label = "Remove outliers...", command = function(){})
   # .......Arrange by:
   ARRNG.MBTN <- tcltk::tkmenubutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","arrange.gif", package = "trident")), height = 50, relief = "flat",
                                    text = "Arrange by", compound = "top")
@@ -220,7 +251,7 @@ trident.gui <- function(){
   TOP3.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","top3.gif", package = "trident")), height = 50, relief = "flat",
                              text = "Top 3", compound = "top", command = function(){})
   # ...Grid all
-  tcltk::tkgrid(TRANS.MBTN, TAG.BTN, ARRNG.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(TAG.BTN, ARRNG.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
 
   # Notetab 'Microwear'----
@@ -251,7 +282,69 @@ trident.gui <- function(){
   NOTEBOOK$PLOTS <- tcltk2::tk2notetab(NOTEBOOK, "Plots")
   # ...Create buttons
   BIPLOT.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","biplot.gif", package = "trident")), height = 50, relief = "flat",
-                              text = "Biplot", compound = "top", command = function(){})
+                              text = "Biplot", compound = "top", command = function(){
+                                # ...a window to select the variables x and the factor y
+                                WIN2 <- tcltk::tktoplevel()
+                                LABELS <- colnames(PROJECT$MYDATASET)
+                                Myx <- NULL
+                                Myy <- NULL
+                                Myfactor <- NULL
+                                XLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                YLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                FACTORLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                # ...OK button
+                                OK.BTN <- tcltk2::tk2button(WIN2, text = "OK", command = function(){
+                                  Myx <<- tcltk2::selection(XLIST)
+                                  Myy <<- tcltk2::selection(YLIST)
+                                  Myfactor <<- tcltk2::selection(FACTORLIST)
+                                  tcltk::tkdestroy(WIN2)
+                                  # ...Biplot window
+                                  WIN3 <<- tcltk::tktoplevel()
+                                  tcltk::tkconfigure(WIN3, borderwidth = 10, bg = "tan")
+                                  tcltk::tkwm.title(WIN3, paste("trident", METADATA$VERSION, "- biplot"))
+                                  WIN3$PLOT <<- tcltk::tkframe(WIN3)
+                                  WIN3$SAVE <- tcltk::tkframe(WIN3)
+                                  # ...Create plot for tcltk widget
+                                  TKPLOT <- NULL
+                                  Plot <- ggplot2::ggplot(data = PROJECT$MYDATASET, ggplot2::aes(x = PROJECT$MYDATASET[, Myx], y = PROJECT$MYDATASET[, Myy], group = PROJECT$MYDATASET[, Myfactor])) +
+                                    ggplot2::labs(x = LABELS[Myx], y = LABELS[Myy]) +
+                                    ggplot2::guides(size = FALSE) +
+                                    ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
+                                                   legend.position = "right", legend.title = ggplot2::element_text(size = 12),
+                                                   axis.text.x = ggplot2::element_text(size = 9, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                                                   axis.text.y = ggplot2::element_text(size = 9, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+                                                   panel.background = ggplot2::element_rect(fill = NA, colour = "#000000", linetype = "dashed"),
+                                                   panel.grid.major = ggplot2::element_line(colour = "#A0A0A0"),
+                                                   panel.grid.minor = ggplot2::element_line(colour = "#C0C0C0"),
+                                                   panel.ontop = FALSE,
+                                                   axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
+                                                   axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
+                                    ggplot2::geom_point(ggplot2::aes(shape = PROJECT$MYDATASET[, Myfactor], color = PROJECT$MYDATASET[, Myfactor]), size = 2) +
+                                    ggplot2::scale_color_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                    ggplot2::scale_shape_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
+                                    ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
+
+                                  TKPLOT <- tkrplot::tkrplot(WIN3$PLOT, fun = function (){graphics::plot(Plot)})
+                                  # ...Create buttons
+                                  SAVEBUTTON <- tcltk::tkbutton(WIN3$SAVE, text = "SAVE", justify = "left", width = 10, command = function(){
+                                    ggplot2::ggsave(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN3, title = "Save plot as...", initialfile = paste(LABELS[Myx], "_vs_", LABELS[Myy], sep =), defaultextension = ".png")), plot = Plot)
+                                    tcltk::tkdestroy(WIN3)
+                                  })
+                                  # Grid all
+                                  tcltk::tkpack(WIN3$PLOT, side = "top", fill = "both" , expand = TRUE)
+                                  tcltk::tkpack(WIN3$SAVE, side = "top", fill = "both" , expand = TRUE)
+                                  tcltk::tkgrid(SAVEBUTTON, padx = 5, pady = 5)
+                                  tcltk::tkgrid(TKPLOT)
+
+
+                                })
+                                CANCEL.BTN <- tcltk2::tk2button(WIN2, text = "Cancel", command = function() tcltk::tkdestroy(WIN2))
+                                # ...grid all
+                                tcltk::tkgrid(tcltk::tklabel(WIN2, text = "Choose x-axis variable"),  tcltk::tklabel(WIN2, text = "Choose y-axis variable"), tcltk::tklabel(WIN2, text = "Choose factor"))
+                                tcltk::tkgrid(XLIST, YLIST, FACTORLIST)
+                                tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+
+                              })
   BOXPLOT.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","boxplot.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Boxplot", compound = "top", command = function(){})
   VIOLIN.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","violin.gif", package = "trident")), height = 50, relief = "flat",
