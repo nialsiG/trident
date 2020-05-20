@@ -14,5 +14,6 @@ Imports:
     tcltk2,
     nortest,
     plyr,
-    stats
+    stats,
+    ggplot2
 RoxygenNote: 7.0.2
