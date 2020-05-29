@@ -6,15 +6,14 @@ trident.gui <- function(){
   # TCLTK OBJECTS----
   METADATA <- list(VERSION = '0.1.0', DESCRIPTION = "Dusty Sandbox")
   PROJECT <- NULL
-  PROJECT <- list(MYFILE = NULL,
-                  MYDATASET = NULL)
+  PROJECT <- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
   #################################################################
 
   #################################################################
   # TCLTK COMMANDS
   # build.table.cmd----
-  build.table.cmd <- function (x, win){
-    WIN2 <<- win
+  build.table.cmd <- function (x, widget){
+    WIN2 <<- widget
     WIN2$TABLE <<- tcltk::tkframe(WIN2)
     WIN2$SAVE <- tcltk::tkframe(WIN2)
     SAVEBUTTON <- tcltk::tkbutton(WIN2$SAVE, text = "SAVE", justify = "left", width = 10, command = function(){
@@ -26,14 +25,14 @@ trident.gui <- function(){
     tcltk::tkpack(WIN2$SAVE, side = "top", fill = "both" , expand = TRUE)
     tcltk::tkgrid(SAVEBUTTON, padx = 5, pady = 5)
     # ...Create table for tcltk widget
-    matrix <- rbind(colnames(x), x)
-    matrix1 <- cbind(row.names(matrix), matrix)
-    matrix1 <- t(t(matrix1))
+    Mymatrix <- as.matrix(x, ncol = length(colnames((x))))
+    Mymatrix <- rbind(colnames(Mymatrix), Mymatrix)
+    Myarray <- cbind(c(paste(0), row.names(x)), Mymatrix)
     # ...Define a Tcl array and initialize it to that matrix :
-    tclArray1 <- tcltk::tclArray()
-    for (i in (1:length(matrix1[, 1]))) {
-      for (j in (1:length(matrix1[1, ]))) {
-        tclArray1[[i-1, j-1]] <- matrix1[i, j]
+    MytclArray <- tcltk::tclArray()
+    for (i in (1:length(Myarray[, 1]))) {
+      for (j in (1:length(Myarray[1, ]))) {
+        MytclArray[[i-1, j-1]] <- Myarray[i, j]
       }
     }
     displayInTable <- function(tclarray, height = -1, width = -1, nrow = -1, ncol = -1){
@@ -53,9 +52,137 @@ trident.gui <- function(){
       tcltk::tktag.configure(Table, "title", background = "tan")
       # ...To control whether rows and/or columns can be resized
       tcltk::tkconfigure(Table, resizeborders = "both")
+
+
+      #tcltk::tkcget(Table, options)
+
+
     }
-    Table <- displayInTable(tclArray1, nrow = nrow(matrix1), ncol = ncol(matrix1), height = 30, width = 20)
+    Table <- displayInTable(MytclArray, nrow = nrow(Myarray), ncol = ncol(Myarray), height = 30, width = 20)
   }
+  # save.project.cmd----
+  save.project.cmd <- function() {
+    rlist::list.save(x = PROJECT, file = tcltk::tclvalue(tcltk::tkgetSaveFile(title = "Save project...", initialfile = paste("Untitled.rds", sep = ""))))
+  }
+  # open.project.cmd----
+  open.project.cmd <- function() {
+    if (length(PROJECT$FILES) != 0) {
+      # ...Open new window
+      WIN4782 <<- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN4782, paste("New project..."))
+      # ...Buttons
+      YES.BTN <- tcltk2::tk2button(WIN4782, text = "Yes", command = function() {
+        tcltk::tkdestroy(WIN4782)
+        save.project.cmd()
+        PROJECT <<- rlist::list.load(choose.files())
+        if (is.null(PROJECT$DATASET) == FALSE) {
+          if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
+          WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
+          build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
+          tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+        }
+      })
+      NO.BTN <- tcltk2::tk2button(WIN4782, text = "No", command = function() {
+        WIN3339 <<- tcltk::tktoplevel()
+        OK3.BTN <- tcltk2::tk2button(WIN3339, text = "OK", command = function() {
+          tcltk::tkdestroy(WIN3339)
+          tcltk::tkdestroy(WIN4782)
+          PROJECT <<- rlist::list.load(choose.files())
+          if (is.null(PROJECT$DATASET) == FALSE) {
+            if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
+            WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
+            build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
+            tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+          }
+        })
+        CANCEL3.BTN <- tcltk2::tk2button(WIN3339, text = "Cancel", command = function() tcltk::tkdestroy(WIN3339))
+        tcltk::tkgrid(tcltk::tklabel(WIN3339, text = "Are you sure? Current project will be deleted from memory."), columnspan = 2)
+        tcltk::tkgrid(OK3.BTN, CANCEL3.BTN, padx = 5, pady = 5)
+      })
+      CANCEL.BTN <- tcltk2::tk2button(WIN4782, text = "Cancel", command = function() tcltk::tkdestroy(WIN4782))
+      # ...Grid all
+      tcltk::tkgrid(tcltk::tklabel(WIN4782, text = "Do you want to save the current project?"), columnspan = 3)
+      tcltk::tkgrid(YES.BTN, NO.BTN, CANCEL.BTN, padx = 5, pady = 5)
+    }
+    if (length(PROJECT$FILES) == 0) {
+      PROJECT <<- rlist::list.load(choose.files())
+      if (is.null(PROJECT$DATASET) == FALSE) {
+        if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
+        WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
+        build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
+        tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+      }
+    }
+  }
+  # new.project.cmd----
+  new.project.cmd <- function() {
+    if (length(PROJECT$FILES) != 0) {
+      # ...Open new window
+      WIN4782 <<- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN4782, paste("New project..."))
+      # ...Buttons
+      YES.BTN <- tcltk2::tk2button(WIN4782, text = "Yes", command = function() {
+        tcltk::tkdestroy(WIN4782)
+        save.project.cmd()
+        PROJECT <<- NULL
+        PROJECT <<- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
+      })
+      NO.BTN <- tcltk2::tk2button(WIN4782, text = "No", command = function() {
+        WIN3339 <<- tcltk::tktoplevel()
+        OK3.BTN <- tcltk2::tk2button(WIN3339, text = "OK", command = function() {
+          tcltk::tkdestroy(WIN3339)
+          tcltk::tkdestroy(WIN4782)
+          PROJECT <<- NULL
+          PROJECT <<- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
+        })
+        CANCEL3.BTN <- tcltk2::tk2button(WIN3339, text = "Cancel", command = function() tcltk::tkdestroy(WIN3339))
+        tcltk::tkgrid(tcltk::tklabel(WIN3339, text = "Are you sure? Current project will be deleted from memory."), columnspan = 2)
+        tcltk::tkgrid(OK3.BTN, CANCEL3.BTN, padx = 5, pady = 5)
+      })
+      CANCEL.BTN <- tcltk2::tk2button(WIN4782, text = "Cancel", command = function() tcltk::tkdestroy(WIN4782))
+      # ...Grid all
+      tcltk::tkgrid(tcltk::tklabel(WIN4782, text = "Do you want to save the current project?"), columnspan = 3)
+      tcltk::tkgrid(YES.BTN, NO.BTN, CANCEL.BTN, padx = 5, pady = 5)
+    }
+    if (length(PROJECT$FILES) == 0) {
+      PROJECT <<- NULL
+      PROJECT <<- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
+    }
+  }
+  # quit.cmd----
+  quit.cmd <- function() {
+    if (length(PROJECT$FILES) != 0) {
+      # ...Open new window
+      WIN4444 <<- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN4444, paste("Save project..."))
+      # ...Buttons
+      YES.BTN <- tcltk2::tk2button(WIN4444, text = "Save", command = function() {
+        tcltk::tkdestroy(WIN4444)
+        cmd.saveproject()
+        # todo: insérer un jalon ici
+        tcltk::tkdestroy(WIN)
+      })
+      NO.BTN <- tcltk2::tk2button(WIN4444, text = "Discard", command = function() {
+        WIN8888 <<- tcltk::tktoplevel()
+        OK3.BTN <- tcltk2::tk2button(WIN8888, text = "Yes (discard)", command = function() {
+          tcltk::tkdestroy(WIN8888)
+          tcltk::tkdestroy(WIN4444)
+          tcltk::tkdestroy(WIN)
+        })
+        CANCEL3.BTN <- tcltk2::tk2button(WIN8888, text = "Cancel", command = function() tcltk::tkdestroy(WIN8888))
+        tcltk::tkgrid(tcltk::tklabel(WIN8888, text = "Are you sure?\nCurrent project will be deleted from memory"), columnspan = 2, padx = 5, pady = 5)
+        tcltk::tkgrid(OK3.BTN, CANCEL3.BTN, padx = 5, pady = 5)
+      })
+      CANCEL.BTN <- tcltk2::tk2button(WIN4444, text = "Cancel", command = function() tcltk::tkdestroy(WIN4444))
+      # ...Grid all
+      tcltk::tkgrid(tcltk::tklabel(WIN4444, text = "Do you want to save the current project?"), columnspan = 3, padx = 5, pady = 5)
+      tcltk::tkgrid(YES.BTN, NO.BTN, CANCEL.BTN, padx = 5, pady = 5)
+    }
+    if (length(PROJECT$FILES) == 0) {
+      tcltk::tkdestroy(WIN)
+    }
+  }
+
   #################################################################
 
   #################################################################
@@ -77,29 +204,29 @@ trident.gui <- function(){
   MENU$FILE <- tcltk::tkmenu(MENU, tearoff = FALSE)
   #
   # ...New project
-  tcltk::tkadd(MENU$FILE, "command", label = "New project...      (Ctrl+N)", command = function(){})
+  tcltk::tkadd(MENU$FILE, "command", label = "New project...      (Ctrl+N)", command = function() new.project.cmd())
   #
   # ...Open project
-  tcltk::tkadd(MENU$FILE, "command", label = "Open project...     (Ctrl+O)", command = function(){})
+  tcltk::tkadd(MENU$FILE, "command", label = "Open project...     (Ctrl+O)", command = function() open.project.cmd())
   #
   # ...Save project
   MENU$FILE$SAVE <- tcltk::tkmenu(MENU$FILE, tearoff = FALSE)
-  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save...        (Ctrl+S)", command = function(){})
+  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save...        (Ctrl+S)", command = function() save.project.cmd())
   tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save as...", command = function(){})
   tcltk::tkadd(MENU$FILE, "cascade", label = "Save project", menu = MENU$FILE$SAVE)
   #
   # ...Exit
   tcltk::tkadd(MENU$FILE, "separator")
-  tcltk::tkadd(MENU$FILE, "command", label = "Quit...      (Ctrl+Q)", command = function() tcltk::tkdestroy(WIN))
+  tcltk::tkadd(MENU$FILE, "command", label = "Quit...      (Ctrl+Q)", command = function() quit.cmd())
   #
   # ...Add File to menu
   tcltk::tkadd(MENU, "cascade", label = "File", menu = MENU$FILE)
   #
   # ...Shortcuts
-  tcltk::tkbind(WIN,"<Control-n>", function() tcltk::tkmessageBox(message = 'New project'))
-  tcltk::tkbind(WIN,"<Control-o>", function() tcltk::tkmessageBox(message = 'Open project'))
-  tcltk::tkbind(WIN,"<Control-s>", function() tcltk::tkmessageBox(message = 'Save'))
-  tcltk::tkbind(WIN,"<Control-q>", function() tcltk::tkmessageBox(message = 'Quit'))
+  tcltk::tkbind(WIN,"<Control-n>", function() new.project.cmd())
+  tcltk::tkbind(WIN,"<Control-o>", function() open.project.cmd())
+  tcltk::tkbind(WIN,"<Control-s>", function() save.project.cmd())
+  tcltk::tkbind(WIN,"<Control-q>", function() quit.cmd())
 
   # Menu 'Edit'----
   MENU$EDIT <- tcltk::tkmenu(MENU, tearoff = FALSE)
@@ -137,16 +264,16 @@ trident.gui <- function(){
                               text = "Open", compound = "top", command = function(){
                                 # ...Open the file and read it with 'tibble'
                                 File.tmp <- tcltk::tk_choose.files(filters = matrix(c("Calc", "R file", "Text", "All files", ".csv", ".txt", ".R", "*"), ncol = 2))
-                                n <- length(PROJECT$MYFILE) +1
+                                n <- length(PROJECT$FILES) +1
                                 # REMARQUE: Utiliser les fonctions du package 'readr' à la place de 'read.table' ?
-                                if (tools::file_ext(File.tmp) == "txt") PROJECT$MYFILE[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL))
-                                if (tools::file_ext(File.tmp) == "csv") PROJECT$MYFILE[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL))
-                                if (is.null(PROJECT$MYDATASET) == FALSE) {
+                                if (tools::file_ext(File.tmp) == "txt") PROJECT$FILES[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL))
+                                if (tools::file_ext(File.tmp) == "csv") PROJECT$FILES[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL))
+                                if (is.null(PROJECT$DATASET) == FALSE) {
                                   # ...a window to choose whether the current dataset must be replaced
                                   WIN3 <- tcltk::tktoplevel()
                                   # ...Yes
                                   YES.BTN <- tcltk::tkbutton(WIN3, text = "Yes", command = function() {
-                                    PROJECT$MYDATASET <<- PROJECT$MYFILE[[n]]
+                                    PROJECT$DATASET <<- PROJECT$FILES[[n]]
                                     tcltk::tkdestroy(WIN3)
                                   })
                                   # ...No
@@ -155,10 +282,10 @@ trident.gui <- function(){
                                   tcltk::tkgrid(YES.BTN, NO.BTN, padx = 5, pady = 5, sticky = "ns")
                                 }
                                 # ...Display dataset in the adequate frame
-                                if (is.null(PROJECT$MYDATASET) == TRUE) PROJECT$MYDATASET <<- PROJECT$MYFILE[[n]]
+                                if (is.null(PROJECT$DATASET) == TRUE) PROJECT$DATASET <<- PROJECT$FILES[[n]]
                                 if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
                                 WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
-                                build.table.cmd(PROJECT$MYDATASET, WIN$TABLE1)
+                                build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
                                 tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
                               })
   BUILD.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","build.gif", package = "trident")), height = 50, relief = "flat",
@@ -207,7 +334,7 @@ trident.gui <- function(){
                                 WIN2 <- tcltk::tktoplevel()
                                 NumVar <- NULL
                                 FacVar <- NULL
-                                LABELS <- colnames(PROJECT$MYDATASET)
+                                LABELS <- colnames(PROJECT$DATASET)
                                 #MyList <- tcltk::tk_select.list(choices = LABELS, preselect = NULL, multiple = TRUE, title = "Choose variables")
                                 NUMVARLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "multiple", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
                                 FACVARLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
@@ -285,7 +412,7 @@ trident.gui <- function(){
                               text = "Biplot", compound = "top", command = function(){
                                 # ...a window to select x, y and the factor
                                 WIN2 <- tcltk::tktoplevel()
-                                LABELS <- colnames(PROJECT$MYDATASET)
+                                LABELS <- colnames(PROJECT$DATASET)
                                 Myx <- NULL
                                 Myy <- NULL
                                 Myfactor <- NULL
@@ -306,7 +433,7 @@ trident.gui <- function(){
                                   WIN3$SAVE <- tcltk::tkframe(WIN3)
                                   # ...Create plot for tcltk widget
                                   TKPLOT <- NULL
-                                  Plot <- ggplot2::ggplot(data = PROJECT$MYDATASET, ggplot2::aes(x = PROJECT$MYDATASET[, Myx], y = PROJECT$MYDATASET[, Myy], group = PROJECT$MYDATASET[, Myfactor])) +
+                                  Plot <- ggplot2::ggplot(data = PROJECT$DATASET, ggplot2::aes(x = PROJECT$DATASET[, Myx], y = PROJECT$DATASET[, Myy], group = PROJECT$DATASET[, Myfactor])) +
                                     ggplot2::labs(x = LABELS[Myx], y = LABELS[Myy]) +
                                     ggplot2::guides(size = FALSE) +
                                     ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
@@ -319,9 +446,9 @@ trident.gui <- function(){
                                                    panel.ontop = FALSE,
                                                    axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
                                                    axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
-                                    ggplot2::geom_point(ggplot2::aes(shape = PROJECT$MYDATASET[, Myfactor], color = PROJECT$MYDATASET[, Myfactor]), size = 2) +
-                                    ggplot2::scale_color_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
-                                    ggplot2::scale_shape_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
+                                    ggplot2::geom_point(ggplot2::aes(shape = PROJECT$DATASET[, Myfactor], color = PROJECT$DATASET[, Myfactor]), size = 2) +
+                                    ggplot2::scale_color_manual(name = LABELS[Myfactor], labels = levels(PROJECT$DATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                    ggplot2::scale_shape_manual(name = LABELS[Myfactor], labels = levels(PROJECT$DATASET[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
                                     ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
                                   TKPLOT <- tkrplot::tkrplot(WIN3$PLOT, fun = function (){graphics::plot(Plot)})
@@ -350,7 +477,7 @@ trident.gui <- function(){
 
                                   # ...a window to select x and the factor
                                   WIN2 <- tcltk::tktoplevel()
-                                  LABELS <- colnames(PROJECT$MYDATASET)
+                                  LABELS <- colnames(PROJECT$DATASET)
                                   Myy <- NULL
                                   Myfactor <- NULL
                                   YLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
@@ -368,7 +495,7 @@ trident.gui <- function(){
                                     WIN3$SAVE <- tcltk::tkframe(WIN3)
                                     # ...Create plot for tcltk widget
                                     TKPLOT <- NULL
-                                    Plot <- ggplot2::ggplot(data = PROJECT$MYDATASET, ggplot2::aes(y = PROJECT$MYDATASET[, Myy], group = PROJECT$MYDATASET[, Myfactor])) +
+                                    Plot <- ggplot2::ggplot(data = PROJECT$DATASET, ggplot2::aes(y = PROJECT$DATASET[, Myy], group = PROJECT$DATASET[, Myfactor])) +
                                       ggplot2::labs(y = LABELS[Myy]) +
                                       ggplot2::guides(size = FALSE) +
                                       ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
@@ -381,9 +508,9 @@ trident.gui <- function(){
                                                      panel.ontop = FALSE,
                                                      axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
                                                      axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
-                                      ggplot2::geom_boxplot(ggplot2::aes(fill = PROJECT$MYDATASET[, Myfactor]), size = 1) +
-                                      #ggplot2::scale_color_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
-                                      ggplot2::scale_fill_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                      ggplot2::geom_boxplot(ggplot2::aes(fill = PROJECT$DATASET[, Myfactor]), size = 1) +
+                                      #ggplot2::scale_color_manual(name = LABELS[Myfactor], labels = levels(PROJECT$DATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                      ggplot2::scale_fill_manual(name = LABELS[Myfactor], labels = levels(PROJECT$DATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
                                       ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
                                     TKPLOT <- tkrplot::tkrplot(WIN3$PLOT, fun = function (){graphics::plot(Plot)})
@@ -412,7 +539,7 @@ trident.gui <- function(){
 
                                   # ...a window to select x and the factor
                                   WIN2 <- tcltk::tktoplevel()
-                                  LABELS <- colnames(PROJECT$MYDATASET)
+                                  LABELS <- colnames(PROJECT$DATASET)
                                   Myy <- NULL
                                   Myfactor <- NULL
                                   YLIST <- tcltk2::tk2listbox(WIN2, values = LABELS, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
@@ -430,7 +557,7 @@ trident.gui <- function(){
                                     WIN3$SAVE <- tcltk::tkframe(WIN3)
                                     # ...Create plot for tcltk widget
                                     TKPLOT <- NULL
-                                    Plot <- ggplot2::ggplot(data = PROJECT$MYDATASET, ggplot2::aes(x = "", y = PROJECT$MYDATASET[, Myy], group = PROJECT$MYDATASET[, Myfactor])) +
+                                    Plot <- ggplot2::ggplot(data = PROJECT$DATASET, ggplot2::aes(x = "", y = PROJECT$DATASET[, Myy], group = PROJECT$DATASET[, Myfactor])) +
                                       ggplot2::labs(y = LABELS[Myy], x = "") +
                                       ggplot2::guides(size = FALSE) +
                                       ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
@@ -443,8 +570,8 @@ trident.gui <- function(){
                                                      panel.ontop = FALSE,
                                                      axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
                                                      axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
-                                      ggplot2::geom_violin(ggplot2::aes(fill = PROJECT$MYDATASET[, Myfactor]), scale = "area", size = 0.5) +
-                                      ggplot2::scale_fill_manual(name = LABELS[Myfactor], labels = levels(PROJECT$MYDATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                      ggplot2::geom_violin(ggplot2::aes(fill = PROJECT$DATASET[, Myfactor]), scale = "area", size = 0.5) +
+                                      ggplot2::scale_fill_manual(name = LABELS[Myfactor], labels = levels(PROJECT$DATASET[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
                                       ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
                                     TKPLOT <- tkrplot::tkrplot(WIN3$PLOT, fun = function (){graphics::plot(Plot)})
@@ -492,6 +619,6 @@ trident.gui <- function(){
   # TKGUI - WRAPPER----
   tcltk::tcl("wm", "attributes", WIN, topmost = TRUE)
   tcltk::tcl("wm", "attributes", WIN, topmost = FALSE)
-  tcltk::tkbind(OPEN.BTN,"<Destroy>", function() tcltk::tkmessageBox(message = 'Hello world'))
+  tcltk::tkbind(OPEN.BTN,"<Destroy>", function() quit.cmd())
   #################################################################
 }
