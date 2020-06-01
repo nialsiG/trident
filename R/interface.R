@@ -12,7 +12,7 @@ trident.gui <- function(){
   #################################################################
   # TCLTK COMMANDS
   # build.table.cmd----
-  build.table.cmd <- function (x, widget){
+  build.table.cmd <- function (x, widget, bg.table = "papayawhip", bg.title = "tan", height = 30, width = 20){
     WIN2 <<- widget
     WIN2$TABLE <<- tcltk::tkframe(WIN2)
     WIN2$SAVE <- tcltk::tkframe(WIN2)
@@ -46,10 +46,10 @@ trident.gui <- function(){
       tcltk::tkgrid(Table, yscr)
       tcltk::tkgrid.configure(yscr, sticky = "nsw")
       tcltk::tkgrid(xscr, sticky = "new")
-      tcltk::tkconfigure(Table, variable = tclarray, background = "papayawhip", selectmode = "extended")
+      tcltk::tkconfigure(Table, variable = tclarray, background = bg.table, selectmode = "extended")
       tcltk::tkconfigure(Table, selectmode = "extended", rowseparator = "\"\n\"", colseparator = "\"\t\"")
       # ...Configuration of table tags
-      tcltk::tktag.configure(Table, "title", background = "tan")
+      tcltk::tktag.configure(Table, "title", background = bg.title)
       # ...To control whether rows and/or columns can be resized
       tcltk::tkconfigure(Table, resizeborders = "both")
 
@@ -58,7 +58,7 @@ trident.gui <- function(){
 
 
     }
-    Table <- displayInTable(MytclArray, nrow = nrow(Myarray), ncol = ncol(Myarray), height = 30, width = 20)
+    Table <- displayInTable(MytclArray, nrow = nrow(Myarray), ncol = ncol(Myarray), height = height, width = width)
   }
   # save.project.cmd----
   save.project.cmd <- function() {
@@ -79,7 +79,11 @@ trident.gui <- function(){
           if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
           WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
           build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-          tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+          tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+          if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+          WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+          build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+          tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
         }
       })
       NO.BTN <- tcltk2::tk2button(WIN4782, text = "No", command = function() {
@@ -92,7 +96,11 @@ trident.gui <- function(){
             if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
             WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
             build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-            tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+            tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+            if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+            WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+            build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+            tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
           }
         })
         CANCEL3.BTN <- tcltk2::tk2button(WIN3339, text = "Cancel", command = function() tcltk::tkdestroy(WIN3339))
@@ -110,7 +118,11 @@ trident.gui <- function(){
         if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
         WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
         build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-        tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+        tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+        if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+        WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+        build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+        tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
       }
     }
   }
@@ -154,7 +166,11 @@ trident.gui <- function(){
     if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
     WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
     build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-    tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+    tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+    if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+    WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+    build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+    tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
   }
   # quit.cmd----
   quit.cmd <- function() {
@@ -289,11 +305,26 @@ trident.gui <- function(){
                                   tcltk::tkgrid(YES.BTN, NO.BTN, padx = 5, pady = 5, sticky = "ns")
                                 }
                                 # ...Display dataset in the adequate frame
-                                if (is.null(PROJECT$DATASET) == TRUE) PROJECT$DATASET <<- PROJECT$FILES[[n]]
+                                if (is.null(PROJECT$DATASET) == TRUE) {
+                                  PROJECT$DATASET <<- PROJECT$FILES[[n]]
+                                  Mydf <- stats::na.omit(dplyr::select_if(PROJECT$DATASET, is.numeric))
+                                  PROJECT$VARIABLES <<- data.frame(#Variables = colnames(dplyr::select_if(PROJECT$DATASET, is.numeric)),
+                                                                  # Min = t(plyr::colwise(min)(Mydf)),
+                                                                  # Quart1 = t(plyr::colwise(stats::quantile)(Mydf, probs = 0.25)),
+                                                                  # Median = t(plyr::colwise(stats::median)(Mydf)),
+                                                                  # Quart3 = t(plyr::colwise(stats::quantile)(Mydf, probs = 0.75)),
+                                                                  # Max = t(plyr::colwise(max)(Mydf)),
+                                                                   Mean = t(plyr::colwise(mean)(Mydf[!is.infinite(rowSums(Mydf)), ])),
+                                                                   SEM = t(plyr::colwise(function(x) stats::var(x)/sqrt(length(x)))(Mydf[!is.infinite(rowSums(Mydf)), ])))
+                                }
                                 if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
                                 WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
                                 build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-                                tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+                                tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+                                if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+                                WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+                                build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+                                tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
                               })
   BUILD.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","build.gif", package = "trident")), height = 50, relief = "flat",
                                text = "Build", compound = "top", command = function(){})
@@ -338,7 +369,11 @@ trident.gui <- function(){
                  if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
                  WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
                  build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
-                 tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+                 tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
+                 if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
+                 WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
+                 build.table.cmd(PROJECT$VARIABLES, WIN$TABLE2, bg.table = "ivory2", bg.title = "ivory4", width = 8)
+                 tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
                })
   tcltk::tkadd(TRANS.MENU, "command", label = "Remove outliers...", command = function(){})
   # ...Grid all
