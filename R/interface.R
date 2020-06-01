@@ -149,6 +149,13 @@ trident.gui <- function(){
       PROJECT <<- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
     }
   }
+  # refresh.cmd----
+  refresh.cmd <- function() {
+    if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
+    WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
+    build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
+    tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+  }
   # quit.cmd----
   quit.cmd <- function() {
     if (length(PROJECT$FILES) != 0) {
@@ -296,22 +303,54 @@ trident.gui <- function(){
                                 text = "Import", compound = "top", command = function(){})
   REMOVE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","rm.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Remove", compound = "top", command = function(){})
+  REFRESH.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","refresh.gif", package = "trident")), height = 50, relief = "flat",
+                                text = "Refresh (F5)", compound = "top", command = function() refresh.cmd())
   # ...Create menubuttons
   # .......Transformations:
   TRANS.MBTN <- tcltk::tkmenubutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","transform.gif", package = "trident")), height = 50, relief = "flat",
                                     text = "Transform", compound = "top")
   TRANS.MENU <- tcltk::tkmenu(TRANS.MBTN)
   tcltk::tkconfigure(TRANS.MBTN, menu = TRANS.MENU)
-  tcltk::tkadd(TRANS.MENU, "command", label = "Boxcox transformation...", command = function(){})
+  tcltk::tkadd(TRANS.MENU, "command", label = "Boxcox transformation...",
+               command = function(){
+                 Mydf <- PROJECT$DATASET
+                 Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+                 Mydf <- stats::na.omit(Mydf)
+                 Numerics <- dplyr::select_if(Mydf, is.numeric)
+                 Factors  <- dplyr::select_if(Mydf, is.factor)
+                 Myfactor <- NULL
+                 # ...a window to select the factor
+                 WIN2589 <- tcltk::tktoplevel()
+                 YLIST <- tcltk2::tk2listbox(WIN2589, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                 # ...buttons
+                 OK.BTN <- tcltk2::tk2button(WIN2589, text = "OK", command = function(){
+                   #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
+                   Myfactor <- tcltk2::selection(YLIST)
+                   Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])
+                   PROJECT$DATASET <<- data.frame(Factors, Numerics$boxcox)
+                   tcltk::tkdestroy(WIN2589)})
+                 CANCEL.BTN <- tcltk2::tk2button(WIN2589, text = "Cancel", command = function() tcltk::tkdestroy(WIN2589))
+                 # ...grid all
+                 tcltk::tkgrid(tcltk::tklabel(WIN2589, text = "Choose factor"), padx = 5, pady = 5)
+                 tcltk::tkgrid(YLIST, columnspan = 2, padx = 5, pady = 5)
+                 tcltk::tkgrid(OK.BTN, CANCEL.BTN, padx = 5, pady = 5)
+                 # ...Display dataset in the adequate frame
+                 if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
+                 WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
+                 build.table.cmd(PROJECT$DATASET, WIN$TABLE1)
+                 tcltk::tkpack(WIN$TABLE1, side = "top", expand = TRUE)
+               })
   tcltk::tkadd(TRANS.MENU, "command", label = "Remove outliers...", command = function(){})
   # ...Grid all
-  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, IMPORT.BTN, REMOVE.BTN, TRANS.MBTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, IMPORT.BTN, REMOVE.BTN, TRANS.MBTN, REFRESH.BTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
   tcltk2::tk2tip(OPEN.BTN, "Open data...")
   tcltk2::tk2tip(BUILD.BTN, "Build new dataset...")
   tcltk2::tk2tip(COMBINE.BTN, "Combine two or more datasets...")
   tcltk2::tk2tip(IMPORT.BTN, "Import variable...")
   tcltk2::tk2tip(REMOVE.BTN, "Remove variable...")
+  # ...Shortcuts
+  tcltk::tkbind(WIN,"<F5>", function() refresh.cmd())
 
   # Notetab 'Statistics'----
   NOTEBOOK$STATS <- tcltk2::tk2notetab(NOTEBOOK, "Statistics")
