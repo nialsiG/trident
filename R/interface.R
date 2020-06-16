@@ -138,6 +138,9 @@ trident.gui <- function(){
   }
   # refresh.cmd----
   refresh.cmd <- function() {
+    PROJECT$VARIABLES <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.numeric)))
+    PROJECT$FACTORS <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.factor)))
+    PROJECT$DATASET <<- data.frame(PROJECT$DATASET[, PROJECT$FACTORS], PROJECT$DATASET[, PROJECT$VARIABLES])
     if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
     WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
     build.table.cmd(PROJECT$DATASET, WIN$TABLE1, bg.table = "papayawhip", bg.title = "tan")
@@ -341,6 +344,7 @@ trident.gui <- function(){
                    #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
                    Myfactor <- tcltk2::selection(YLIST)
                    Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])
+                   colnames(Numerics$boxcox) <- paste(colnames(Numerics$boxcox), "boxcox", sep = ".")
                    PROJECT$DATASET <<- data.frame(Factors, Numerics$boxcox)
                    tcltk::tkdestroy(WIN2589)
                    refresh.cmd()})
@@ -495,7 +499,7 @@ trident.gui <- function(){
                                   }
                                   # Build window with table
                                   WIN5566 <<- tcltk::tktoplevel()
-                                  tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- homoscedasticity"))
+                                  tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- summary"))
                                   build.table.cmd(Mytable, WIN5566)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
