@@ -300,24 +300,50 @@ trident.gui <- function(){
                                   YES.BTN <- tcltk::tkbutton(WIN3, text = "Yes", command = function() {
                                     PROJECT$DATASET <<- PROJECT$FILES[[n]]
                                     tcltk::tkdestroy(WIN3)
+                                    refresh.cmd()
                                   })
                                   # ...No
                                   NO.BTN <- tcltk::tkbutton(WIN3, text = "No", command = function() {tcltk::tkdestroy(WIN3)})
                                   tcltk::tkgrid(tcltk::tklabel(WIN3, text = "Do you want to replace current dataset?"))
                                   tcltk::tkgrid(YES.BTN, NO.BTN, padx = 5, pady = 5, sticky = "ns")
+                                  if (is.null(WIN$TABLE3) == FALSE) tcltk::tkdestroy(WIN$TABLE3)
+                                  WIN$TABLE3 <<- tcltk2::tk2frame(WIN)
+                                  FILELIST <- tcltk2::tk2listbox(WIN$TABLE3, values = names(PROJECT$FILES), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                  tcltk::tkgrid(tcltk::tklabel(WIN$TABLE3, text = "Opened files"))
+                                  tcltk::tkgrid(FILELIST)
+                                  tcltk::tkpack(WIN$TABLE3, side = "top", expand = FALSE)
+
                                 }
                                 # ...Display dataset in the adequate frame
                                 if (is.null(PROJECT$DATASET) == TRUE) {
                                   PROJECT$DATASET <<- PROJECT$FILES[[n]]
                                   Mydf <- stats::na.omit(dplyr::select_if(PROJECT$DATASET, is.numeric))
                                   PROJECT$VARIABLES <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.numeric)))
+                                  refresh.cmd()
                                 }
-                                refresh.cmd()
+
                               })
   BUILD.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","build.gif", package = "trident")), height = 50, relief = "flat",
                                text = "Build", compound = "top", command = function(){})
   COMBINE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","combine.gif", package = "trident")), height = 50, relief = "flat",
-                               text = "Combine", compound = "top", command = function(){})
+                               text = "Combine", compound = "top", command = function(){
+                                 WIN6842 <- tcltk::tktoplevel()
+                                 FILELIST <- tcltk2::tk2listbox(WIN6842, values = names(PROJECT$FILES), selectmode = "multiple", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+
+                                 COMBINE.BTN <- tcltk2::tk2button(WIN6842, text = "Combine!", command = function() {
+                                   Myselect <- tcltk2::selection(FILELIST)
+                                   tcltk::tkdestroy(WIN6842)
+                                   PROJECT$DATASET <<- data.frame(PROJECT$FILES[Myselect])
+                                   refresh.cmd()
+                                 })
+                                 CANCEL.BTN <- tcltk2::tk2button(WIN6842, text = "Cancel", command = function() tcltk::tkdestroy(WIN6842))
+                                 # Grid all
+                                 tcltk::tkgrid(tcltk::tklabel(WIN6842, text = "Please select files to combine"))
+                                 tcltk::tkgrid(FILELIST)
+                                 tcltk::tkgrid(COMBINE.BTN, CANCEL.BTN)
+
+
+                               })
   IMPORT.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","import.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Import", compound = "top", command = function(){})
   REMOVE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","rm.gif", package = "trident")), height = 50, relief = "flat",
