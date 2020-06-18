@@ -138,16 +138,13 @@ trident.gui <- function(){
   }
   # refresh.cmd----
   refresh.cmd <- function() {
-    PROJECT$VARIABLES <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.numeric)))
-    PROJECT$FACTORS <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.factor)))
-    PROJECT$DATASET <<- data.frame(PROJECT$DATASET[, PROJECT$FACTORS], PROJECT$DATASET[, PROJECT$VARIABLES])
     if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
     WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
     build.table.cmd(PROJECT$DATASET, WIN$TABLE1, bg.table = "papayawhip", bg.title = "tan")
     tcltk::tkpack(WIN$TABLE1, side = "left", expand = TRUE)
     if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
     WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
-    VARLIST <- tcltk2::tk2listbox(WIN$TABLE2, values = PROJECT$VARIABLES, selectmode = "multiple", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    VARLIST <- tcltk2::tk2listbox(WIN$TABLE2, values = PROJECT$VARIABLES, selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
     RENAME.BTN <- tcltk2::tk2button(WIN$TABLE2, text = "Rename", command = function(){
       WIN9511 <- tcltk::tktoplevel()
       Varname <- tcltk::tclVar(PROJECT$VARIABLES[tcltk2::selection(VARLIST)])
@@ -167,6 +164,13 @@ trident.gui <- function(){
     tcltk::tkgrid(VARLIST)
     tcltk::tkgrid(RENAME.BTN)
     tcltk::tkpack(WIN$TABLE2, side = "top", expand = FALSE)
+
+    if (is.null(WIN$TABLE3) == FALSE) tcltk::tkdestroy(WIN$TABLE3)
+    WIN$TABLE3 <<- tcltk2::tk2frame(WIN)
+    FILELIST <- tcltk2::tk2listbox(WIN$TABLE3, values = names(PROJECT$FILES), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    tcltk::tkgrid(tcltk::tklabel(WIN$TABLE3, text = "Opened files"))
+    tcltk::tkgrid(FILELIST)
+    tcltk::tkpack(WIN$TABLE3, side = "top", expand = FALSE)
   }
   # quit.cmd----
   quit.cmd <- function() {
@@ -281,12 +285,14 @@ trident.gui <- function(){
   # ...Create buttons
   OPEN.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","open.gif", package = "trident")), height = 50, relief = "flat",
                               text = "Open", compound = "top", command = function(){
-                                # ...Open the file and read it with 'tibble'
+                                # ...Open the file and read it
                                 File.tmp <- tcltk::tk_choose.files(filters = matrix(c("Calc", "R file", "Text", "All files", ".csv", ".txt", ".R", "*"), ncol = 2))
                                 n <- length(PROJECT$FILES) +1
                                 # REMARQUE: Utiliser les fonctions du package 'readr' à la place de 'read.table' ?
                                 if (tools::file_ext(File.tmp) == "txt") PROJECT$FILES[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL))
                                 if (tools::file_ext(File.tmp) == "csv") PROJECT$FILES[[n]] <<- data.frame(read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL))
+                                names(PROJECT$FILES)[[n]] <<- paste0(rev(unlist(base::strsplit(File.tmp, "/")))[1])
+                                if (anyDuplicated(names(PROJECT$FILES)) != 0) names(PROJECT$FILES)[[n]] <<- paste0(rev(unlist(base::strsplit(File.tmp, "/")))[1], "(", n,")")
                                 if (is.null(PROJECT$DATASET) == FALSE) {
                                   # ...a window to choose whether the current dataset must be replaced
                                   WIN3 <- tcltk::tktoplevel()
