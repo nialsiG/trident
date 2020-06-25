@@ -15,5 +15,7 @@ Imports:
     nortest,
     plyr,
     stats,
-    ggplot2
+    ggplot2,
+    colorspace,
+    imager
 RoxygenNote: 7.0.2
