@@ -3,7 +3,7 @@
 #' @export
 trident.gui <- function(){
   # TCLTK OBJECTS----
-  METADATA <- list(VERSION = '0.2.1', DESCRIPTION = "It's alive (or is it?)")
+  METADATA <- list(VERSION = '0.2.9', DESCRIPTION = "Hold your (sea)horses")
   PROJECT <- NULL
   PROJECT <- list(FILES = list(),
                   DATASET = NULL,
@@ -153,25 +153,46 @@ trident.gui <- function(){
     build.table.cmd(PROJECT$DATASET, WIN$TABLE1, bg.table = "papayawhip", bg.title = "tan")
     if (is.null(WIN$TABLE2) == FALSE) tcltk::tkdestroy(WIN$TABLE2)
     WIN$TABLE2 <<- tcltk2::tk2frame(WIN)
-    PROJECT$VARIABLES <<- as.factor(colnames(dplyr::select_if(PROJECT$DATASET, is.numeric)))
-    VARLIST <- tcltk2::tk2listbox(WIN$TABLE2, values = PROJECT$VARIABLES, selectmode = "single", height = 12, width = 0, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-    RENAME.BTN <- tcltk2::tk2button(WIN$TABLE2, text = "Rename", command = function(){
-      WIN9511 <- tcltk::tktoplevel()
-      Varname <- tcltk::tclVar(PROJECT$VARIABLES[tcltk2::selection(VARLIST)])
-      VARNAME.ENT <- tcltk2::tk2entry(WIN9511, textvariable = Varname, width = 20)
-      OK.BTN <- tcltk2::tk2button(WIN9511, text = "OK", command = function(){
-        colnames(PROJECT$DATASET[colnames(PROJECT$VARIABLES)[tcltk2::selection(VARLIST)]]) <<- tcltk::tclvalue(Varname)
-        tcltk::tkdestroy(WIN9511)
+    PROJECT$VARIABLES <<- colnames(dplyr::select_if(PROJECT$DATASET, is.numeric))
+    WIN$TABLE2$VARLIST <<- tcltk2::tk2listbox(WIN$TABLE2, values = PROJECT$VARIABLES, selectmode = "single", height = 12, width = 0, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    # ...one button to rename them (variables) all
+    RENAME.BTN <- tcltk::tkbutton(WIN$TABLE2, text = "Rename", command = function() {
+      # ......create window for name entry
+      WIN4320 <- tcltk::tktoplevel()
+      txt_var <- tcltk::tclVar(paste(PROJECT$VARIABLES[tcltk2::selection(WIN$TABLE2$VARLIST)]))
+      NAME.ENTRY <- tcltk2::tk2entry(WIN4320, textvariable = txt_var)
+      CONFIRM.BTN <- tcltk2::tk2button(WIN4320, text = "Confirm", command = function() {
+        Newname <- tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))
+        Oldname <- paste(PROJECT$VARIABLES[tcltk2::selection(WIN$TABLE2$VARLIST)])
+        colnames(PROJECT$DATASET)[which(colnames(PROJECT$DATASET) == Oldname)] <<- Newname
         refresh.cmd()
+        tcltk::tkdestroy(WIN4320)
       })
-      CANCEL.BTN <- tcltk2::tk2button(WIN9511, text = "Cancel", command = function() tcltk::tkdestroy(WIN9511))
-      tcltk::tkgrid(tcltk::tklabel(WIN9511, text = "Enter new variable name:"))
-      tcltk::tkgrid(VARNAME.ENT)
-      tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+      CANCEL.BTN <- tcltk2::tk2button(WIN4320, text = "Cancel", command = function() tcltk::tkdestroy(WIN4320))
+      # ......grid all
+      tcltk::tkgrid(tcltk::tklabel(WIN4320, text = "Enter new variable name:"), columnspan = 2)
+      tcltk::tkgrid(NAME.ENTRY, columnspan = 2)
+      tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
     })
-    tcltk::tkgrid(tcltk::tklabel(WIN$TABLE2, text = "Variables"))
-    tcltk::tkgrid(VARLIST)
-    tcltk::tkgrid(RENAME.BTN)
+    # ...one button to remove them (variables) all
+    REMOVE.BTN <- tcltk::tkbutton(WIN$TABLE2, text = "Remove", command = function() {
+      # ......create window to confirm removal
+      WIN4321 <- tcltk::tktoplevel()
+      REMOVE.BTN <- tcltk2::tk2button(WIN4321, text = "Yes (remove)", command = function() {
+        Myselect <- PROJECT$VARIABLES[tcltk2::selection(WIN$TABLE2$VARLIST)]
+        PROJECT$DATASET <<- PROJECT$DATASET[, -which(colnames(PROJECT$DATASET) == Myselect)]
+        refresh.cmd()
+        tcltk::tkdestroy(WIN4321)
+      })
+      CANCEL.BTN <- tcltk2::tk2button(WIN4321, text = "No (cancel)", command = function() tcltk::tkdestroy(WIN4321))
+      # ......grid all
+      tcltk::tkgrid(tcltk::tklabel(WIN4321, text = "Are you sure you want to remove\nselected variable?"))
+      tcltk::tkgrid(REMOVE.BTN, CANCEL.BTN)
+    })
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN$TABLE2, text = "Variables"), columnspan = 2)
+    tcltk::tkgrid(WIN$TABLE2$VARLIST, columnspan = 2)
+    tcltk::tkgrid(RENAME.BTN, REMOVE.BTN, ipadx = 5)
     if (is.null(WIN$TABLE3) == FALSE) tcltk::tkdestroy(WIN$TABLE3)
     WIN$TABLE3 <<- tcltk2::tk2frame(WIN)
     FILELIST <- tcltk2::tk2listbox(WIN$TABLE3, values = names(PROJECT$FILES), selectmode = "single", height = 12, width = 0, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
@@ -356,10 +377,6 @@ trident.gui <- function(){
                                  tcltk::tkgrid(FILELIST)
                                  tcltk::tkgrid(COMBINE.BTN, CANCEL.BTN)
                                })
-  IMPORT.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","import.gif", package = "trident")), height = 50, relief = "flat",
-                                text = "Import", compound = "top", command = function() {})
-  REMOVE.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","rm.gif", package = "trident")), height = 50, relief = "flat",
-                                text = "Remove", compound = "top", command = function() {})
   REFRESH.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","refresh.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "Refresh (F5)", compound = "top", command = function() refresh.cmd())
   # ...Create menubuttons
@@ -402,13 +419,11 @@ trident.gui <- function(){
                })
   tcltk::tkadd(TRANS.MENU, "command", label = "Remove outliers...", command = function(){})
   # ...Grid all
-  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, IMPORT.BTN, REMOVE.BTN, TRANS.MBTN, REFRESH.BTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, TRANS.MBTN, REFRESH.BTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
   tcltk2::tk2tip(OPEN.BTN, "Open data...")
   tcltk2::tk2tip(BUILD.BTN, "Build new dataset...")
   tcltk2::tk2tip(COMBINE.BTN, "Combine two or more datasets...")
-  tcltk2::tk2tip(IMPORT.BTN, "Import variable...")
-  tcltk2::tk2tip(REMOVE.BTN, "Remove variable...")
   # ...Shortcuts
   tcltk::tkbind(WIN,"<F5>", function() refresh.cmd())
 
@@ -557,7 +572,6 @@ trident.gui <- function(){
                                   Myfactor <- tcltk2::selection(WIN2259$FACTORLIST)
                                   tcltk::tkdestroy(WIN2259)
                                   Mycheck <- trident::multicheck(df = Numerics, y = Factors[, Myfactor])
-                                  #Mytable <- data.frame(unlist(Mycheck))
                                   Mytable <- data.frame(Mycheck)
                                   # Build window with table
                                   WIN5566 <<- tcltk::tktoplevel()
