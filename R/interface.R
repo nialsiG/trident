@@ -2,18 +2,17 @@
 #' @description Open the trident graphical user interface.
 #' @export
 trident.gui <- function(){
-  #################################################################
   # TCLTK OBJECTS----
   METADATA <- list(VERSION = '0.2.1', DESCRIPTION = "It's alive (or is it?)")
   PROJECT <- NULL
-  PROJECT <- list(FILES = list(), DATASET = NULL, VARIABLES = NULL, GRAPH.OPTIONS = NULL)
-  PROJECT$GRAPH.OPTIONS <- list(JIGGER.VALUE = tcltk::tclVar("0"),
+  PROJECT <- list(FILES = list(), DATASET = NULL, VARIABLES = NULL, OPTIONS = NULL)
+  PROJECT$OPTIONS <- list(JIGGER.VALUE = tcltk::tclVar("0"),
+                                BOXCOX.VALUE = tcltk::tclVar("0"),
+                                DIXON.VALUE = tcltk::tclVar("0"),
                                 PLOT.COLORS = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
-  #################################################################
 
-  #################################################################
   # TCLTK COMMANDS
-  # build.table.cmd----
+  # --build.table.cmd----
   build.table.cmd <- function (x, widget, bg.table = "ivory", bg.title = "dimgray", height = 27, width = 12){
     WIN2 <<- widget
     WIN2$TABLE <<- tcltk::tkframe(WIN2)
@@ -70,11 +69,11 @@ trident.gui <- function(){
     }
     Table <- displayInTable(MytclArray, nrow = nrow(Myarray), ncol = ncol(Myarray), height = height, width = width)
   }
-  # save.project.cmd----
+  # --save.project.cmd----
   save.project.cmd <- function() {
     rlist::list.save(x = PROJECT, file = tcltk::tclvalue(tcltk::tkgetSaveFile(title = "Save project...", initialfile = paste("Untitled.rds", sep = ""))))
   }
-  # open.project.cmd----
+  # --open.project.cmd----
   open.project.cmd <- function() {
     if (length(PROJECT$FILES) != 0) {
       # ...Open new window
@@ -109,7 +108,7 @@ trident.gui <- function(){
       refresh.cmd()
     }
   }
-  # new.project.cmd----
+  # --new.project.cmd----
   new.project.cmd <- function() {
     if (length(PROJECT$FILES) != 0) {
       # ...Open new window
@@ -144,7 +143,7 @@ trident.gui <- function(){
       PROJECT <<- list(FILES = list(), DATASET = NULL, VARIABLES = NULL)
     }
   }
-  # refresh.cmd----
+  # --refresh.cmd----
   refresh.cmd <- function() {
     if (is.null(WIN$TABLE1) == FALSE) tcltk::tkdestroy(WIN$TABLE1)
     WIN$TABLE1 <<- tcltk2::tk2frame(WIN)
@@ -182,7 +181,7 @@ trident.gui <- function(){
     tcltk::tkpack(WIN$TABLE3, side = "top", expand = FALSE, fill = "x", anchor = "nw")
 
   }
-  # quit.cmd----
+  # --quit.cmd----
   quit.cmd <- function() {
     if (length(PROJECT$FILES) != 0) {
       # ...Open new window
@@ -216,24 +215,18 @@ trident.gui <- function(){
     }
   }
 
-  #################################################################
-
-  #################################################################
   # TKGUI - MAIN WINDOW
-  # Window----
+  # --Window----
   WIN <<- tcltk::tktoplevel()
   tcltk2::tk2theme(theme = "radiance")
   tcltk::tkconfigure(WIN, borderwidth = 10, bg = "tan")
   tcltk::tkwm.title(WIN, paste("trident", METADATA$VERSION, "-", METADATA$DESCRIPTION))
   tcltk2::tk2ico.setFromFile(WIN, system.file("extdata","pics","mini_grazr.ico", package = "trident"))
-  #################################################################
-
-  #################################################################
   # TKGUI - MENU
-  # Menu----
+  # --Menu----
   MENU <- tcltk2::tk2menu(WIN)
   tcltk::tkconfigure(WIN, menu = MENU)
-  # Menu 'File'----
+  # --Menu 'File'----
   MENU$FILE <- tcltk::tkmenu(MENU, tearoff = FALSE)
   #
   # ...New project
@@ -261,7 +254,7 @@ trident.gui <- function(){
   tcltk::tkbind(WIN,"<Control-s>", function() save.project.cmd())
   tcltk::tkbind(WIN,"<Control-q>", function() quit.cmd())
 
-  # Menu 'Edit'----
+  # --Menu 'Edit'----
   MENU$EDIT <- tcltk::tkmenu(MENU, tearoff = FALSE)
   #
   # ...Undo
@@ -277,20 +270,17 @@ trident.gui <- function(){
   tcltk::tkbind(WIN,"<Control-z>", function() tcltk::tkmessageBox(message = 'Undo'))
   tcltk::tkbind(WIN,"<Control-y>", function() tcltk::tkmessageBox(message = 'Redo'))
 
-  # Menu 'About'----
+  # --Menu 'About'----
   MENU$ABOUT <- tcltk::tkmenu(MENU, tearoff = FALSE)
   # ...About
   tcltk::tkadd(MENU$ABOUT, "command", label = "About...", command = function(){})
   # Add About to menu
   tcltk::tkadd(MENU, "cascade", label = "About", menu = MENU$ABOUT)
-  #################################################################
-
-  #################################################################
-  #TKGUI - NOTEBOOK
-  # Notebook----
+  # TKGUI - NOTEBOOK
+  # --Notebook----
   NOTEBOOK <- tcltk2::tk2notebook(WIN, height = 100, tabs = c("Data", "Statistics", "Variables", "Plots", "Microwear", "Batch analysis"))
   tcltk::tkpack(NOTEBOOK, side = "top", fill = "both" , expand = FALSE)
-  # Notetab 'Data'----
+  # --Notetab 'Data'----
   NOTEBOOK$DATA <- tcltk2::tk2notetab(NOTEBOOK, "Data")
   # ...Create buttons
   OPEN.BTN <- tcltk::tkbutton(NOTEBOOK$DATA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","open.gif", package = "trident")), height = 50, relief = "flat",
@@ -419,7 +409,7 @@ trident.gui <- function(){
   # ...Shortcuts
   tcltk::tkbind(WIN,"<F5>", function() refresh.cmd())
 
-  # Notetab 'Statistics'----
+  # --Notetab 'Statistics'----
   NOTEBOOK$STATS <- tcltk2::tk2notetab(NOTEBOOK, "Statistics")
   # ...Create buttons
   SUM.BTN <- tcltk::tkbutton(NOTEBOOK$STATS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","summary.gif", package = "trident")), height = 50, relief = "flat",
@@ -468,11 +458,6 @@ trident.gui <- function(){
                                   build.table.cmd(Mytable, WIN5566)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
-                                  tcltk::tkbind(WIN5566,"<Destroy>", function() {
-                                    utils::write.table(Mytable, file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN2, title = "Save table as...", initialfile = paste("Untitled"), defaultextension = ".txt")),
-                                                       append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE)
-                                  })
-
                                 })
                                 CANCEL.BTN <- tcltk2::tk2button(WIN2259, text = "Cancel", command = function() tcltk::tkdestroy(WIN2259))
                                 tcltk::tkgrid(tcltk::tklabel(WIN2259, text = "Choose factor"), columnspan = 2)
@@ -480,7 +465,6 @@ trident.gui <- function(){
                                 tcltk::tkgrid(OK.BTN, CANCEL.BTN)
                                 tcltk::tcl("wm", "attributes", WIN2259, topmost = TRUE)
                                 tcltk::tcl("wm", "attributes", WIN2259, topmost = FALSE)
-
                               })
   DISC.BTN <- tcltk::tkbutton(NOTEBOOK$STATS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","discrim.gif", package = "trident")), height = 50, relief = "flat",
                               text = "Discriminant", compound = "top", command = function(){
@@ -509,11 +493,6 @@ trident.gui <- function(){
                                   build.table.cmd(Mytable, WIN5566)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
-                                  tcltk::tkbind(WIN5566,"<Destroy>", function() {
-                                    utils::write.table(Mytable, file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN2, title = "Save table as...", initialfile = paste("Untitled"), defaultextension = ".txt")),
-                                                       append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE)
-                                  })
-
                                 })
                                 CANCEL.BTN <- tcltk2::tk2button(WIN2259, text = "Cancel", command = function() tcltk::tkdestroy(WIN2259))
                                 tcltk::tkgrid(tcltk::tklabel(WIN2259, text = "Choose factor"), columnspan = 2)
@@ -548,10 +527,6 @@ trident.gui <- function(){
                                   build.table.cmd(Mytable, WIN5566)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
-                                  tcltk::tkbind(WIN5566,"<Destroy>", function() {
-                                    utils::write.table(Mytable, file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN2, title = "Save table as...", initialfile = paste("Untitled"), defaultextension = ".txt")),
-                                                       append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE)
-                                  })
                                 })
                                 CANCEL.BTN <- tcltk2::tk2button(WIN2259, text = "Cancel", command = function() tcltk::tkdestroy(WIN2259))
                                 tcltk::tkgrid(tcltk::tklabel(WIN2259, text = "Choose factor"), columnspan = 2)
@@ -586,11 +561,6 @@ trident.gui <- function(){
                                   build.table.cmd(Mytable, WIN5566)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
                                   tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
-                                  tcltk::tkbind(WIN5566,"<Destroy>", function() {
-                                    utils::write.table(Mytable, file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN2, title = "Save table as...", initialfile = paste("Untitled"), defaultextension = ".txt")),
-                                                       append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE)
-                                  })
-
                                 })
                                 CANCEL.BTN <- tcltk2::tk2button(WIN2259, text = "Cancel", command = function() tcltk::tkdestroy(WIN2259))
                                 tcltk::tkgrid(tcltk::tklabel(WIN2259, text = "Choose factor"), columnspan = 2)
@@ -603,33 +573,396 @@ trident.gui <- function(){
   tcltk::tkgrid(SUM.BTN, MULTI.BTN, DISC.BTN, NONDISC.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
 
-  # Notetab 'Variables'----
+  # --Notetab 'Variables'----
   NOTEBOOK$VARIA <- tcltk2::tk2notetab(NOTEBOOK, "Variables")
   # ...Create menubuttons
   # .......Arrange by:
-  ARRNG.MBTN <- tcltk::tkmenubutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","arrange.gif", package = "trident")), height = 50, relief = "flat",
-                                   text = "Arrange by", compound = "top")
+  ARRNG.MBTN <- tcltk::tkmenubutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","arrange.gif", package = "trident")), height = 50, relief = "flat", text = "Arrange by", compound = "top")
   ARRNG.MENU <- tcltk::tkmenu(ARRNG.MBTN)
   tcltk::tkconfigure(ARRNG.MBTN, menu = ARRNG.MENU)
-  tcltk::tkadd(ARRNG.MENU, "command", label = "F-stat...", command = function(){
+  tcltk::tkadd(ARRNG.MENU, "command", label = "F-stat...", command = function() {
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "f.stat")
+      tcltk::tkdestroy(WIN5885)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by F-stat"))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+  })
+  tcltk::tkadd(ARRNG.MENU, "command", label = "ANOVA P-value...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "aov.p.value")
+      tcltk::tkdestroy(WIN5885)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by ANOVA's p-value"))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+    })
+  tcltk::tkadd(ARRNG.MENU, "command", label = "Kruskall P-value...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "k.p.value")
+      tcltk::tkdestroy(WIN5885)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by Kruskall's p-value"))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)  })
+  tcltk::tkadd(ARRNG.MENU, "command", label = "Mean HSD P-value...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "mean.hsd.p.value")
+      tcltk::tkdestroy(WIN5885)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by mean HSD p-value"))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
 
   })
-  tcltk::tkadd(ARRNG.MENU, "command", label = "ANOVA P-value...", command = function(){})
-  tcltk::tkadd(ARRNG.MENU, "command", label = "Kruskall P-value...", command = function(){})
-  tcltk::tkadd(ARRNG.MENU, "command", label = "Mean HSD P-value...", command = function(){})
-  tcltk::tkadd(ARRNG.MENU, "command", label = "Mean LSD P-value...", command = function(){})
-  tcltk::tkadd(ARRNG.MENU, "command", label = "HSD P-value by group priority...", command = function(){})
-  tcltk::tkadd(ARRNG.MENU, "command", label = "LSD P-value by group priority...", command = function(){})
+  tcltk::tkadd(ARRNG.MENU, "command", label = "Mean LSD P-value...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "mean.lsd.p.value")
+      tcltk::tkdestroy(WIN5885)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by mean LSD p-value"))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+  })
+  tcltk::tkadd(ARRNG.MENU, "command", label = "HSD P-value by group priority...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...combobox for group priority
+    Mygroups <- NULL
+    GROUP.CMBBX <- tcltk2::tk2combobox(WIN5885, values = "Mygroups")
+    tcltk::tkbind(FACTOR.CMBBX,"<<ComboboxSelected>>", function() {
+      # ......Groups of pair-wise comparisons
+      y <- Factors[, tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))]
+      Mygroups <- c()
+      Mygroups$AB <- paste(levels(y)[1], levels(y)[2], sep = "-")
+      Mygroups$AC <- paste(levels(y)[1], levels(y)[3], sep = "-")
+      Mygroups$BC <- paste(levels(y)[2], levels(y)[3], sep = "-")
+      if (length(levels(y)) > 3) {
+        Mygroups$AD <- paste(levels(y)[1], levels(y)[4], sep = "-")
+        Mygroups$BD <- paste(levels(y)[2], levels(y)[4], sep = "-")
+        Mygroups$CD <- paste(levels(y)[3], levels(y)[4], sep = "-")
+        if (length(levels(y)) > 4) {
+          Mygroups$AE <- paste(levels(y)[1], levels(y)[5], sep = "-")
+          Mygroups$BE <- paste(levels(y)[2], levels(y)[5], sep = "-")
+          Mygroups$CE <- paste(levels(y)[3], levels(y)[5], sep = "-")
+          Mygroups$DE <- paste(levels(y)[4], levels(y)[5], sep = "-")
+          if (length(levels(y)) > 5) {
+            Mygroups$AF <- paste(levels(y)[1], levels(y)[6], sep = "-")
+            Mygroups$BF <- paste(levels(y)[2], levels(y)[6], sep = "-")
+            Mygroups$CF <- paste(levels(y)[3], levels(y)[6], sep = "-")
+            Mygroups$DF <- paste(levels(y)[4], levels(y)[6], sep = "-")
+            Mygroups$EF <- paste(levels(y)[5], levels(y)[6], sep = "-")
+          }
+        }
+      }
+      tcltk::tkconfigure(GROUP.CMBBX, values = c(unlist(Mygroups)))
+    })
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......group priority
+      if (is.null(Mygroups)) {Mypriority <- NULL}
+      if (!is.null(Mygroups)) {
+        Mypriority <- names(c(unlist(Mygroups)))[tcltk::tcl(GROUP.CMBBX, "current")]
+      }
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "hsd.p.value", gp.priority = Mypriority)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by HSD p-value - priority:", c(unlist(Mygroups))[tcltk::tcl(GROUP.CMBBX, "current")]))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+      tcltk::tkdestroy(WIN5885)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Give priority to one category?  "), GROUP.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+  })
+  tcltk::tkadd(ARRNG.MENU, "command", label = "LSD P-value by group priority...", command = function(){
+    # ...a window to select the factor
+    WIN5885 <- tcltk::tktoplevel()
+    Mydf <- PROJECT$DATASET
+    Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+    Mydf <- stats::na.omit(Mydf)
+    Numerics <- dplyr::select_if(Mydf, is.numeric)
+    Factors  <- dplyr::select_if(Mydf, is.factor)
+    # ...combobox for factor choice
+    FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+    # ...combobox for group priority
+    Mygroups <- NULL
+    GROUP.CMBBX <- tcltk2::tk2combobox(WIN5885, values = "Mygroups")
+    tcltk::tkbind(FACTOR.CMBBX,"<<ComboboxSelected>>", function() {
+      # ......Groups of pair-wise comparisons
+      y <- Factors[, tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))]
+      Mygroups <- c()
+      Mygroups$AB <- paste(levels(y)[1], levels(y)[2], sep = "-")
+      Mygroups$AC <- paste(levels(y)[1], levels(y)[3], sep = "-")
+      Mygroups$BC <- paste(levels(y)[2], levels(y)[3], sep = "-")
+      if (length(levels(y)) > 3) {
+        Mygroups$AD <- paste(levels(y)[1], levels(y)[4], sep = "-")
+        Mygroups$BD <- paste(levels(y)[2], levels(y)[4], sep = "-")
+        Mygroups$CD <- paste(levels(y)[3], levels(y)[4], sep = "-")
+        if (length(levels(y)) > 4) {
+          Mygroups$AE <- paste(levels(y)[1], levels(y)[5], sep = "-")
+          Mygroups$BE <- paste(levels(y)[2], levels(y)[5], sep = "-")
+          Mygroups$CE <- paste(levels(y)[3], levels(y)[5], sep = "-")
+          Mygroups$DE <- paste(levels(y)[4], levels(y)[5], sep = "-")
+          if (length(levels(y)) > 5) {
+            Mygroups$AF <- paste(levels(y)[1], levels(y)[6], sep = "-")
+            Mygroups$BF <- paste(levels(y)[2], levels(y)[6], sep = "-")
+            Mygroups$CF <- paste(levels(y)[3], levels(y)[6], sep = "-")
+            Mygroups$DF <- paste(levels(y)[4], levels(y)[6], sep = "-")
+            Mygroups$EF <- paste(levels(y)[5], levels(y)[6], sep = "-")
+          }
+        }
+      }
+      tcltk::tkconfigure(GROUP.CMBBX, values = c(unlist(Mygroups)))
+    })
+    # ...checkbuttons for options
+    BOXCOX.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "BoxCox transformation?")
+    tcltk::tkconfigure(BOXCOX.CHKBTN, variable = PROJECT$OPTIONS$BOXCOX.VALUE)
+    DIXON.CHKBTN <- tcltk2::tk2checkbutton(WIN5885, text = "Remove outliers?")
+    tcltk::tkconfigure(DIXON.CHKBTN, variable = PROJECT$OPTIONS$DIXON.VALUE)
+    # ...OK button
+    OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+      Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+      # ......options
+      if (tcltk::tclvalue(PROJECT$OPTIONS$BOXCOX.VALUE) == 1) {
+        Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+        colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+      }
+      if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
+      # ......group priority
+      if (is.null(Mygroups)) {Mypriority <- NULL}
+      if (!is.null(Mygroups)) {
+        Mypriority <- names(c(unlist(Mygroups)))[tcltk::tcl(GROUP.CMBBX, "current")]
+      }
+      # ......arrange
+      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "lsd.p.value", gp.priority = Mypriority)
+      # ......display in new window
+      WIN5566 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by LSD p-value - priority:", c(unlist(Mygroups))[tcltk::tcl(GROUP.CMBBX, "current")]))
+      build.table.cmd(Mytable, WIN5566)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+      tcltk::tkdestroy(WIN5885)
+    })
+    CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+    # ...grid all
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+    tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Give priority to one category?  "), GROUP.CMBBX)
+    tcltk::tkgrid(BOXCOX.CHKBTN)
+    tcltk::tkgrid(DIXON.CHKBTN)
+    tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+    tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+  })
   # ...Create buttons
-  TAG.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","tag.gif", package = "trident")), height = 50, relief = "flat",
-                              text = "Tag", compound = "top", command = function(){})
+  #TAG.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","tag.gif", package = "trident")), height = 50, relief = "flat",
+  #                            text = "Tag", compound = "top", command = function(){})
   TOP3.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","top3.gif", package = "trident")), height = 50, relief = "flat",
                              text = "Top 3", compound = "top", command = function(){})
   # ...Grid all
-  tcltk::tkgrid(TAG.BTN, ARRNG.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(ARRNG.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
 
-  # Notetab 'Plots'----
+  # --Notetab 'Plots'----
   NOTEBOOK$PLOTS <- tcltk2::tk2notetab(NOTEBOOK, "Plots")
   # ...Create buttons
   BIPLOT.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","biplot.gif", package = "trident")), height = 50, relief = "flat",
@@ -714,7 +1047,7 @@ trident.gui <- function(){
                                   FACTORLIST <- tcltk2::tk2listbox(WIN2, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
                                   # ...Jiggerplot checkbutton
                                   JIGGER.CHKBTN <- tcltk2::tk2checkbutton(WIN2, text = "Jiggerplot")
-                                  tcltk::tkconfigure(JIGGER.CHKBTN, variable = PROJECT$GRAPH.OPTIONS$JIGGER.VALUE)
+                                  tcltk::tkconfigure(JIGGER.CHKBTN, variable = PROJECT$OPTIONS$JIGGER.VALUE)
                                   # ...OK button
                                   OK.BTN <- tcltk2::tk2button(WIN2, text = "OK", command = function() {
                                     Myy <<- colnames(Numerics)[tcltk2::selection(YLIST)]
@@ -743,15 +1076,15 @@ trident.gui <- function(){
                                                      axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
                                       ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
-                                    if (tcltk::tclvalue(PROJECT$GRAPH.OPTIONS$JIGGER.VALUE) == 0) {
+                                    if (tcltk::tclvalue(PROJECT$OPTIONS$JIGGER.VALUE) == 0) {
                                       Plot <- Plot +
-                                        ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$GRAPH.OPTIONS$PLOT.COLORS) +
+                                        ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
                                         ggplot2::geom_boxplot(ggplot2::aes(fill = Mydf[, Myfactor]), size = 0.6)
                                     }
-                                    if (tcltk::tclvalue(PROJECT$GRAPH.OPTIONS$JIGGER.VALUE) == 1) {
+                                    if (tcltk::tclvalue(PROJECT$OPTIONS$JIGGER.VALUE) == 1) {
                                       Plot <- Plot +
-                                        ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$GRAPH.OPTIONS$PLOT.COLORS) +
-                                        ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = colorspace::lighten(PROJECT$GRAPH.OPTIONS$PLOT.COLORS, amount = 0.5)) +
+                                        ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
+                                        ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = colorspace::lighten(PROJECT$OPTIONS$PLOT.COLORS, amount = 0.5)) +
                                         ggplot2::geom_boxplot(ggplot2::aes(fill = Mydf[, Myfactor]), size = 0.6, show.legend = FALSE) +
                                         ggplot2::geom_jitter(ggplot2::aes(col = Mydf[, Myfactor]), position = ggplot2::position_jitterdodge(jitter.width = 0.5))
                                     }
@@ -817,7 +1150,7 @@ trident.gui <- function(){
                                                      axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
                                                      axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
                                       ggplot2::geom_violin(ggplot2::aes(fill = Mydf[, Myfactor]), scale = "area", size = 0.5) +
-                                      ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$GRAPH.OPTIONS$PLOT.COLORS) +
+                                      ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
                                       ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
                                     TKPLOT <- tkrplot::tkrplot(WIN3$PLOT, fun = function() {graphics::plot(Plot)})
@@ -848,7 +1181,7 @@ trident.gui <- function(){
   # ...Tooltips
 
 
-  # Notetab 'Microwear'----
+  # --Notetab 'Microwear'----
   NOTEBOOK$MICRO <- tcltk2::tk2notetab(NOTEBOOK, "Microwear")
   # ...Create buttons
   LOAD.BTN <- tcltk::tkbutton(NOTEBOOK$MICRO, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","wip.gif", package = "trident")), height = 50, relief = "flat",
@@ -874,7 +1207,7 @@ trident.gui <- function(){
 
 
 
-  # Notetab 'Batch analysis'----
+  # --Notetab 'Batch analysis'----
   NOTEBOOK$BATCH <- tcltk2::tk2notetab(NOTEBOOK, "Batch analysis")
   # ...Create buttons
   DIR.BTN <- tcltk::tkbutton(NOTEBOOK$BATCH, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","directory.gif", package = "trident")), height = 50, relief = "flat",
@@ -884,12 +1217,8 @@ trident.gui <- function(){
   # ...Grid all
   tcltk::tkgrid(DIR.BTN, LAUNCH.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
-  #################################################################
-
-  #################################################################
   # TKGUI - WRAPPER----
   tcltk::tcl("wm", "attributes", WIN, topmost = TRUE)
   tcltk::tcl("wm", "attributes", WIN, topmost = FALSE)
   tcltk::tkbind(OPEN.BTN,"<Destroy>", function() quit.cmd())
-  #################################################################
 }

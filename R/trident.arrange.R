@@ -145,7 +145,7 @@ trident.arrange <- function(df, y, by = "mean.hsd.p.value", gp.priority = NULL) 
     if (by[h] == "k") Argmt.factor <- c(Argmt.factor, 'k')
     if (by[h] == "k.p.value") Argmt.factor <- c(Argmt.factor, 'k.p.value')
     if (by[h] == "f.stat") Argmt.factor <- c(Argmt.factor, 'f.stat')
-    if (by[h] == "aov.p.value") Argmt.factor <- c(Argmt.factor, 'k.aov.value')
+    if (by[h] == "aov.p.value") Argmt.factor <- c(Argmt.factor, 'aov.p.value')
     if (by[h] == "hsd.p.value") {
       if (is.null(gp.priority) == TRUE) Argmt.factor <- c(Argmt.factor, colnames(HSD[, -1]))
       else if (is.null(gp.priority) == FALSE) {
