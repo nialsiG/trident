@@ -5,11 +5,14 @@ trident.gui <- function(){
   # TCLTK OBJECTS----
   METADATA <- list(VERSION = '0.2.1', DESCRIPTION = "It's alive (or is it?)")
   PROJECT <- NULL
-  PROJECT <- list(FILES = list(), DATASET = NULL, VARIABLES = NULL, OPTIONS = NULL)
+  PROJECT <- list(FILES = list(),
+                  DATASET = NULL,
+                  VARIABLES = NULL,
+                  OPTIONS = NULL)
   PROJECT$OPTIONS <- list(JIGGER.VALUE = tcltk::tclVar("0"),
-                                BOXCOX.VALUE = tcltk::tclVar("0"),
-                                DIXON.VALUE = tcltk::tclVar("0"),
-                                PLOT.COLORS = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+                          BOXCOX.VALUE = tcltk::tclVar("0"),
+                          DIXON.VALUE = tcltk::tclVar("0"),
+                          PLOT.COLORS = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
 
   # TCLTK COMMANDS
   # --build.table.cmd----
@@ -554,7 +557,8 @@ trident.gui <- function(){
                                   Myfactor <- tcltk2::selection(WIN2259$FACTORLIST)
                                   tcltk::tkdestroy(WIN2259)
                                   Mycheck <- trident::multicheck(df = Numerics, y = Factors[, Myfactor])
-                                  Mytable <- data.frame(unlist(Mycheck))
+                                  #Mytable <- data.frame(unlist(Mycheck))
+                                  Mytable <- data.frame(Mycheck)
                                   # Build window with table
                                   WIN5566 <<- tcltk::tktoplevel()
                                   tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- Multicheck"))
