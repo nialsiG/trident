@@ -297,7 +297,12 @@ trident.gui <- function(){
   # --Menu 'About'----
   MENU$ABOUT <- tcltk::tkmenu(MENU, tearoff = FALSE)
   # ...About
-  tcltk::tkadd(MENU$ABOUT, "command", label = "About...", command = function(){})
+  tcltk::tkadd(MENU$ABOUT, "command", label = "Francisco et al. 2018\nSurf. Topotr.: Metrol. Prop.", command = function(){
+    Mypath <- 'inst/extdata/about/Francisco2018a.pdf'
+    system(paste0('open "', Mypath, '"'))
+    })
+  tcltk::tkadd(MENU$ABOUT, "command", label = "<ESPACE RESERVE>", command = function(){})
+  tcltk::tkadd(MENU$ABOUT, "command", label = "<ESPACE RESERVE>", command = function(){})
   # Add About to menu
   tcltk::tkadd(MENU, "cascade", label = "About", menu = MENU$ABOUT)
   # TKGUI - NOTEBOOK
@@ -623,7 +628,7 @@ trident.gui <- function(){
       }
       if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "f.stat")
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "f.stat")
       tcltk::tkdestroy(WIN5885)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
@@ -666,7 +671,7 @@ trident.gui <- function(){
       }
       if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "aov.p.value")
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "aov.p.value")
       tcltk::tkdestroy(WIN5885)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
@@ -709,7 +714,7 @@ trident.gui <- function(){
       }
       if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "k.p.value")
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "k.p.value")
       tcltk::tkdestroy(WIN5885)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
@@ -751,7 +756,7 @@ trident.gui <- function(){
       }
       if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "mean.hsd.p.value")
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "mean.hsd.p.value")
       tcltk::tkdestroy(WIN5885)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
@@ -795,7 +800,7 @@ trident.gui <- function(){
       }
       if (tcltk::tclvalue(PROJECT$OPTIONS$DIXON.VALUE) == 1) {}
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "mean.lsd.p.value")
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "mean.lsd.p.value")
       tcltk::tkdestroy(WIN5885)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
@@ -873,7 +878,7 @@ trident.gui <- function(){
         Mypriority <- names(c(unlist(Mygroups)))[tcltk::tcl(GROUP.CMBBX, "current")]
       }
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "hsd.p.value", gp.priority = Mypriority)
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "hsd.p.value", gp.priority = Mypriority)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
       tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by HSD p-value - priority:", c(unlist(Mygroups))[tcltk::tcl(GROUP.CMBBX, "current")]))
@@ -952,7 +957,7 @@ trident.gui <- function(){
         Mypriority <- names(c(unlist(Mygroups)))[tcltk::tcl(GROUP.CMBBX, "current")]
       }
       # ......arrange
-      Mytable <- trident::trident.arrange(df = Numerics, y = Mydf[, Myfactor], by = "lsd.p.value", gp.priority = Mypriority)
+      Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "lsd.p.value", gp.priority = Mypriority)
       # ......display in new window
       WIN5566 <- tcltk::tktoplevel()
       tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by LSD p-value - priority:", c(unlist(Mygroups))[tcltk::tcl(GROUP.CMBBX, "current")]))
@@ -975,7 +980,47 @@ trident.gui <- function(){
   #TAG.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","tag.gif", package = "trident")), height = 50, relief = "flat",
   #                            text = "Tag", compound = "top", command = function(){})
   TOP3.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","top3.gif", package = "trident")), height = 50, relief = "flat",
-                             text = "Top 3", compound = "top", command = function(){})
+                             text = "Top 3", compound = "top", command = function(){
+
+                               # ...a window to select the factor
+                               WIN5885 <- tcltk::tktoplevel()
+                               Mydf <- PROJECT$DATASET
+                               Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+                               Mydf <- stats::na.omit(Mydf)
+                               Numerics <- dplyr::select_if(Mydf, is.numeric)
+                               Factors  <- dplyr::select_if(Mydf, is.factor)
+                               # ...combobox for factor choice
+                               FACTOR.CMBBX <- tcltk2::tk2combobox(WIN5885, values = colnames(Factors))
+                               # ...OK button
+                               OK.BTN <- tcltk2::tk2button(WIN5885, text = "OK", command = function(){
+                                 Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
+                                 # ......Boxcox
+                                 Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
+                                 # ......Discriminant variables
+                                 Mycheck <- multicheck(df = Numerics, y = Factors[, Myfactor])
+                                 MyDiscVar <- c(Mycheck$variable[which(Mycheck$is.discriminant == TRUE)])
+                                 Numerics <- Numerics[, MyDiscVar]
+                                 # ...DIXON !!!
+
+                                 # ......arrange
+                                 Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "mean.hsd.p.value")
+                                 # ......onlykeep best three discriminant variables
+                                 Mytable <- Mytable[1:3, ]
+                                 tcltk::tkdestroy(WIN5885)
+                                 # ......display in new window
+                                 WIN5566 <- tcltk::tktoplevel()
+                                 tcltk::tkwm.title(WIN5566, paste("trident", METADATA$VERSION, "- arranged by mean HSD p-value"))
+                                 build.table.cmd(Mytable, WIN5566)
+                                 tcltk::tcl("wm", "attributes", WIN5566, topmost = TRUE)
+                                 tcltk::tcl("wm", "attributes", WIN5566, topmost = FALSE)
+                               })
+                               CANCEL.BTN <- tcltk2::tk2button(WIN5885, text = "Cancel", command = function() tcltk::tkdestroy(WIN5885))
+                               # ...grid all
+                               tcltk::tkgrid(tcltk::tklabel(WIN5885, text = "Choose factor:  "), FACTOR.CMBBX)
+                               tcltk::tkgrid(OK.BTN, CANCEL.BTN)
+                               tcltk::tcl("wm", "attributes", WIN5885, topmost = TRUE)
+                               tcltk::tcl("wm", "attributes", WIN5885, topmost = FALSE)
+                             })
   # ...Grid all
   tcltk::tkgrid(ARRNG.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips

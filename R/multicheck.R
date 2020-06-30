@@ -95,9 +95,9 @@ multicheck <- function(df, y, check.anderson = TRUE, check.anova = TRUE, check.b
       IS.HOMOSCEDASTIC[(IS.NORMAL == TRUE | IS.NORMAL == "nearly") & P.BARTLETT >= alpha & VAR.RATIO >= 3] <- FALSE
       IS.HOMOSCEDASTIC[(IS.NORMAL == TRUE | IS.NORMAL == "nearly") & IS.HOMOSCEDASTIC == FALSE & P.LEVENE < alpha] <- "nearly"
       if (is.null(P.ANOVA) == FALSE) {
-        IS.DISCRIMINANT[(IS.NORMAL == TRUE | IS.NORMAL == "nearly") & (IS.HOMOSCEDASTIC == TRUE | IS.HOMOSCEDASTIC == "nearly") & P.ANOVA < alpha] <- TRUE
+        IS.DISCRIMINANT[((IS.NORMAL == TRUE & IS.HOMOSCEDASTIC == "nearly") | (IS.HOMOSCEDASTIC == TRUE & IS.NORMAL == "nearly")) & P.ANOVA < alpha] <- TRUE
         IS.DISCRIMINANT[(IS.HOMOSCEDASTIC == TRUE | IS.HOMOSCEDASTIC == "nearly") & P.KRUSKAL < alpha] <- TRUE
-        IS.DISCRIMINANT[IS.HOMOSCEDASTIC == FALSE | is.na(IS.HOMOSCEDASTIC) == TRUE | P.ANOVA >= alpha | P.KRUSKAL >= alpha | (is.na(P.ANOVA) == TRUE & is.na(P.KRUSKAL) == TRUE )] <- FALSE
+        IS.DISCRIMINANT[IS.HOMOSCEDASTIC == FALSE | is.na(IS.HOMOSCEDASTIC) == TRUE | P.ANOVA >= alpha & P.KRUSKAL >= alpha | (is.na(P.ANOVA) == TRUE & is.na(P.KRUSKAL) == TRUE )] <- FALSE
       }
     }
   }
