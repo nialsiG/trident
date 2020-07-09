@@ -17,5 +17,9 @@ Imports:
     stats,
     ggplot2,
     colorspace,
-    imager
+    imager,
+    car,
+    rlist,
+    svglite,
+    tkrplot
 RoxygenNote: 7.0.2
