@@ -1342,9 +1342,9 @@ trident.gui <- function() {
 
   PCA.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","pca.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "PCA", compound = "top", command = function() {
+                                  # ...a window to select variables for the PCA
                                   WIN44A <- tcltk::tktoplevel()
-
-                                  #Mydf <- PROJECT$DATASET
+                                  Mydf <- PROJECT$DATASET
                                   Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
                                   Mydf <- stats::na.omit(Mydf)
                                   Numerics <- dplyr::select_if(Mydf, is.numeric)
@@ -1365,75 +1365,90 @@ trident.gui <- function() {
                                     Mycor.df <- data.frame(Mypca$rotation)
 
                                     # ...Window to select which PC to plot
-
-
-
-                                    # ...PCA plot window
                                     WIN44B <<- tcltk::tktoplevel()
-                                    tcltk::tkconfigure(WIN44B, borderwidth = 10, bg = "tan")
-                                    #tcltk::tkwm.title(WIN44B, paste("trident", METADATA$VERSION, "- pca"))
-                                    WIN44B$PLOT <<- tcltk::tkframe(WIN44B)
-                                    WIN44B$SAVE <- tcltk::tkframe(WIN44B)
-                                    # ...Create plot for tcltk widget
+                                    # ......screeplot
                                     TKPLOT <- NULL
+                                    SCREEPLOT <- factoextra::fviz_eig(Mypca, addlabels = TRUE, ylim = c(0, 50), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
+                                    TKPLOT <- tkrplot::tkrplot(WIN44B, fun = function() graphics::plot(SCREEPLOT))
+                                    # ......PCs
+                                    MYPCLIST1 <- tcltk2::tk2listbox(WIN44B, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+                                    MYPCLIST2 <- tcltk2::tk2listbox(WIN44B, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
 
-                                    Plot <- ggplot2::ggplot(data = Mypca.df, ggplot2::aes(x = Mypca.df[, 1], y = Mypca.df[, 2], group = Mydf[, which(colnames(Mydf) %in% Myfactor)])) +
-                                      ggplot2::labs(x = colnames(Mypca.df)[1], y = colnames(Mypca.df)[2]) +
-                                      ggplot2::guides(size = FALSE) +
-                                      ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
-                                                     legend.position = "right", legend.title = ggplot2::element_text(size = 12),
-                                                     axis.text.x = ggplot2::element_text(size = 9, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
-                                                     axis.text.y = ggplot2::element_text(size = 9, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
-                                                     panel.background = ggplot2::element_rect(fill = NA, colour = "#000000", linetype = "dashed"),
-                                                     panel.grid.major = ggplot2::element_line(colour = "#A0A0A0"),
-                                                     panel.grid.minor = ggplot2::element_line(colour = "#C0C0C0"),
-                                                     panel.ontop = FALSE,
-                                                     axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
-                                                     axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
-                                      ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor]), size = 2) +
-                                      ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
-                                      ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
-                                      ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
+                                    # ......Buttons
+                                    PLOT.BTN <- tcltk2::tk2button(WIN44B, text = "Plot", tip = "Plot the selected PCs against each other", command = function() {
+                                      # ...PCA plot window
+                                      WIN44C <<- tcltk::tktoplevel()
+                                      tcltk::tkconfigure(WIN44C, borderwidth = 10, bg = "tan")
+                                      #tcltk::tkwm.title(WIN44C, paste("trident", METADATA$VERSION, "- pca"))
+                                      WIN44C$PLOT <<- tcltk::tkframe(WIN44C)
+                                      WIN44C$SAVE <- tcltk::tkframe(WIN44C)
+                                      # ...Create plot for tcltk widget
+                                      TKPLOT <- NULL
+                                      Plot <- ggplot2::ggplot(data = Mypca.df, ggplot2::aes(x = Mypca.df[, tcltk2::selection(MYPCLIST1)], y = Mypca.df[, tcltk2::selection(MYPCLIST2)], group = Mydf[, which(colnames(Mydf) %in% Myfactor)])) +
+                                        ggplot2::labs(x = colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], y = colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)]) +
+                                        ggplot2::guides(size = FALSE) +
+                                        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
+                                                       legend.position = "bottom", legend.title = ggplot2::element_text(size = 12),
+                                                       axis.text.x = ggplot2::element_text(size = 9, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                                                       axis.text.y = ggplot2::element_text(size = 9, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+                                                       panel.background = ggplot2::element_rect(fill = NA, colour = "#000000", linetype = "dashed"),
+                                                       panel.grid.major = ggplot2::element_line(colour = "#A0A0A0"),
+                                                       panel.grid.minor = ggplot2::element_line(colour = "#C0C0C0"),
+                                                       panel.ontop = FALSE,
+                                                       axis.title.x = ggplot2::element_text(size = 10, angle = 00, face = "italic"),
+                                                       axis.title.y = ggplot2::element_text(size = 10, angle = 90, face = "italic")) +
+                                        ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor]), size = 2) +
+                                        ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
+                                        ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
+                                        ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
-                                    for (i in c(1:length(rownames(Mycor.df)))) {
-                                      Plot <- Plot +  ggplot2::geom_segment(
-                                        x = 0, y = 0,
-                                        xend = Mycor.df[i, 1], yend = Mycor.df[i, 2],
-                                        lineend = "butt", # See available arrow types in example above
-                                        linejoin = "mitre",
-                                        size = 1,  col = "firebrick4",
-                                        arrow = ggplot2::arrow(length = ggplot2::unit(0.5, 'picas')))
-                                      # Vers la droite
-                                      if (Mycor.df[i, 1] > 0) {
-                                        Plot <- Plot + ggplot2::geom_text(
-                                          x = Mycor.df[i, 1], y = Mycor.df[i, 2],
-                                          label = paste(" ", rownames(Mycor.df)[i], sep = ""),
-                                          hjust = 0, vjust = 0,  col = "firebrick4",
-                                          angle = atan(Mycor.df[i, 2]/Mycor.df[i, 1])/pi*180
-                                        )
+                                      for (i in c(1:length(rownames(Mycor.df)))) {
+                                        Plot <- Plot +  ggplot2::geom_segment(
+                                          x = 0, y = 0,
+                                          xend = Mycor.df[i, tcltk2::selection(MYPCLIST1)], yend = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                          lineend = "butt", # See available arrow types in example above
+                                          linejoin = "mitre",
+                                          size = 1,  col = "firebrick4",
+                                          arrow = ggplot2::arrow(length = ggplot2::unit(0.5, 'picas')))
+                                        # Vers la droite
+                                        if (Mycor.df[i, tcltk2::selection(MYPCLIST1)] > 0) {
+                                          Plot <- Plot + ggplot2::geom_text(
+                                            x = Mycor.df[i, tcltk2::selection(MYPCLIST1)], y = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                            label = paste(" ", rownames(Mycor.df)[i], sep = ""),
+                                            hjust = 0, vjust = 0,  col = "firebrick4",
+                                            angle = atan(Mycor.df[i, tcltk2::selection(MYPCLIST2)]/Mycor.df[i, tcltk2::selection(MYPCLIST1)])/pi*180
+                                          )
+                                        }
+                                        # Vers la gauche
+                                        if (Mycor.df[i, tcltk2::selection(MYPCLIST1)] < 0) {
+                                          Plot <- Plot + ggplot2::geom_text(
+                                            x = Mycor.df[i, tcltk2::selection(MYPCLIST1)], y = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                            label = paste(rownames(Mycor.df)[i], " ", sep = ""),
+                                            hjust = 1, vjust = 0,  col = "firebrick4",
+                                            angle = atan(Mycor.df[i, tcltk2::selection(MYPCLIST2)]/Mycor.df[i, tcltk2::selection(MYPCLIST1)])/pi*180
+                                          )
+                                        }
                                       }
-                                      # Vers la gauche
-                                      if (Mycor.df[i, 1] < 0) {
-                                        Plot <- Plot + ggplot2::geom_text(
-                                          x = Mycor.df[i, 1], y = Mycor.df[i, 2],
-                                          label = paste(rownames(Mycor.df)[i], " ", sep = ""),
-                                          hjust = 1, vjust = 0,  col = "firebrick4",
-                                          angle = atan(Mycor.df[i, 2]/Mycor.df[i, 1])/pi*180
-                                        )
-                                      }
-                                    }
 
-                                    TKPLOT <- tkrplot::tkrplot(WIN44B$PLOT, fun = function() {graphics::plot(Plot)})
-                                    # ...Create buttons
-                                    SAVEBUTTON <- tcltk::tkbutton(WIN44B$SAVE, text = "SAVE", justify = "left", width = 10, command = function() {
-                                      ggplot2::ggsave(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN44B, title = "Save plot as...", initialfile = paste("PC1 vs PC2", sep =""), defaultextension = ".png")), plot = Plot)
-                                      tcltk::tkdestroy(WIN44B)
-                                    })
+                                      TKPLOT <- tkrplot::tkrplot(WIN44C$PLOT, fun = function() {graphics::plot(Plot)})
+                                      # ...Create buttons
+                                      SAVEBUTTON <- tcltk::tkbutton(WIN44C$SAVE, text = "SAVE", justify = "left", width = 10, command = function() {
+                                        ggplot2::ggsave(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN44C, title = "Save plot as...", initialfile = paste("PC1 vs PC2", sep =""), defaultextension = ".png")), plot = Plot)
+                                        tcltk::tkdestroy(WIN44C)
+                                      })
                                     # Grid all
-                                    tcltk::tkpack(WIN44B$PLOT, side = "top", fill = "both" , expand = TRUE)
-                                    tcltk::tkpack(WIN44B$SAVE, side = "top", fill = "both" , expand = TRUE)
+                                    tcltk::tkpack(WIN44C$PLOT, side = "top", fill = "both" , expand = TRUE)
+                                    tcltk::tkpack(WIN44C$SAVE, side = "top", fill = "both" , expand = TRUE)
                                     tcltk::tkgrid(SAVEBUTTON, padx = 5, pady = 5)
                                     tcltk::tkgrid(TKPLOT)
+                                    })
+                                    DONE.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Clicking this will close this window", command = function() tcltk::tkdestroy(WIN44B))
+                                    # Grid all
+                                    tcltk::tkgrid(TKPLOT, columnspan = 2)
+                                    tcltk::tkgrid(tcltk::tklabel(WIN44B, text = "Select PCs:"), columnspan = 2)
+                                    tcltk::tkgrid(MYPCLIST1, MYPCLIST2)
+                                    tcltk::tkgrid(PLOT.BTN, DONE.BTN)
+
                                   })
                                   CANCEL.BTN <- tcltk2::tk2button(WIN44A, text = "Cancel", command = function() tcltk::tkdestroy(WIN44A))
                                   # ...grid all
