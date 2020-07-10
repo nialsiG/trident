@@ -14,7 +14,11 @@ trident.gui <- function() {
   PROJECT$OPTIONS <- list(JIGGER.VALUE = tcltk::tclVar("0"),
                           BOXCOX.VALUE = tcltk::tclVar("0"),
                           DIXON.VALUE = tcltk::tclVar("0"),
-                          PLOT.COLORS = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+                          PLOT.COLORS = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"),
+                          PLOT.DPI = 300,
+                          PLOT.HEIGHT = 140,
+                          PLOT.WIDTH = 140,
+                          PLOT.UNITS = "mm")
 
   # TCLTK COMMANDS
   # --build.table.cmd----
@@ -1401,39 +1405,60 @@ trident.gui <- function() {
                                         ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")) +
                                         ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = c(16, 17, 15, 1, 2, 5, 7, 12)) +
                                         ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
+                                      # ...Correlation circle
+                                      # ......change radius of the correlation circle
+                                      Myradius <- sqrt(abs((max(Mypca.df))*(min(Mypca.df))))/2
+                                      Mydirections <- Myradius * Mycor.df
 
                                       for (i in c(1:length(rownames(Mycor.df)))) {
                                         Plot <- Plot +  ggplot2::geom_segment(
                                           x = 0, y = 0,
-                                          xend = Mycor.df[i, tcltk2::selection(MYPCLIST1)], yend = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                          xend = Mydirections[i, tcltk2::selection(MYPCLIST1)], yend = Mydirections[i, tcltk2::selection(MYPCLIST2)],
                                           lineend = "butt", # See available arrow types in example above
                                           linejoin = "mitre",
-                                          size = 1,  col = "firebrick4",
+                                          size = 1,  col = "steelblue",
                                           arrow = ggplot2::arrow(length = ggplot2::unit(0.5, 'picas')))
                                         # Vers la droite
                                         if (Mycor.df[i, tcltk2::selection(MYPCLIST1)] > 0) {
                                           Plot <- Plot + ggplot2::geom_text(
-                                            x = Mycor.df[i, tcltk2::selection(MYPCLIST1)], y = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                            x = Mydirections[i, tcltk2::selection(MYPCLIST1)], y = Mydirections[i, tcltk2::selection(MYPCLIST2)],
                                             label = paste(" ", rownames(Mycor.df)[i], sep = ""),
-                                            hjust = 0, vjust = 0,  col = "firebrick4",
+                                            hjust = 0, vjust = 0,  col = "steelblue", size = 3,
                                             angle = atan(Mycor.df[i, tcltk2::selection(MYPCLIST2)]/Mycor.df[i, tcltk2::selection(MYPCLIST1)])/pi*180
                                           )
                                         }
                                         # Vers la gauche
                                         if (Mycor.df[i, tcltk2::selection(MYPCLIST1)] < 0) {
                                           Plot <- Plot + ggplot2::geom_text(
-                                            x = Mycor.df[i, tcltk2::selection(MYPCLIST1)], y = Mycor.df[i, tcltk2::selection(MYPCLIST2)],
+                                            x = Mydirections[i, tcltk2::selection(MYPCLIST1)], y = Mydirections[i, tcltk2::selection(MYPCLIST2)],
                                             label = paste(rownames(Mycor.df)[i], " ", sep = ""),
-                                            hjust = 1, vjust = 0,  col = "firebrick4",
+                                            hjust = 1, vjust = 0,  col = "steelblue", size = 3,
                                             angle = atan(Mycor.df[i, tcltk2::selection(MYPCLIST2)]/Mycor.df[i, tcltk2::selection(MYPCLIST1)])/pi*180
                                           )
                                         }
                                       }
 
-                                      TKPLOT <- tkrplot::tkrplot(WIN44C$PLOT, fun = function() {graphics::plot(Plot)})
+                                      TKPLOT <- tkrplot::tkrplot(WIN44C$PLOT, hscale = 1.5, vscale = 1.5, fun = function() {graphics::plot(Plot)})
                                       # ...Create buttons
                                       SAVEBUTTON <- tcltk::tkbutton(WIN44C$SAVE, text = "SAVE", justify = "left", width = 10, command = function() {
-                                        ggplot2::ggsave(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN44C, title = "Save plot as...", initialfile = paste("PC1 vs PC2", sep =""), defaultextension = ".png")), plot = Plot)
+                                        ggplot2::ggsave(Plot,
+                                                        file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN00,
+                                                                                                    title = "Save plot as...",
+                                                                                                    initialfile = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], "vs", colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], sep = " "),
+                                                                                                    filetypes = paste (
+                                                                                                      "{{png files} {.png}}",
+                                                                                                      "{{eps files} {.eps}}",
+                                                                                                      "{{jpeg files} {.jpg .jpeg} }",
+                                                                                                      "{{pdf files} {.pdf}}",
+                                                                                                      "{{svg files} {.svg}}",
+                                                                                                      "{{tiff files} {.tiff}}",
+                                                                                                      "{{wmf files} {.wmf}}",
+                                                                                                      "{{All files} {*}}", sep =" "),
+                                                                                                    defaultextension = ".png")),
+                                                        dpi = PROJECT$OPTIONS$PLOT.DPI,
+                                                        height = PROJECT$OPTIONS$PLOT.HEIGHT,
+                                                        width = PROJECT$OPTIONS$PLOT.WIDTH,
+                                                        units = PROJECT$OPTIONS$PLOT.UNITS)
                                         tcltk::tkdestroy(WIN44C)
                                       })
                                     # Grid all
