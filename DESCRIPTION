@@ -22,5 +22,6 @@ Imports:
     rlist,
     svglite,
     tkrplot,
-    factoextra
+    factoextra,
+    gtools
 RoxygenNote: 7.0.2
