@@ -26,7 +26,6 @@ trident.gui <- function() {
                           PLOT.HEIGHT = 150,
                           PLOT.WIDTH = 140,
                           PLOT.UNITS = "mm")
-
   # TCLTK COMMANDS
   # --build.table.cmd----
   # a command to build tables in any widget
@@ -700,7 +699,6 @@ trident.gui <- function() {
       # ......PCs
       MYPCLIST1 <- tcltk2::tk2listbox(WIN44B, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
       MYPCLIST2 <- tcltk2::tk2listbox(WIN44B, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-
       # ......Buttons
       PLOT.BTN <- tcltk2::tk2button(WIN44B, text = "Plot", tip = "Plot the selected PCs against each other", command = function() {
         # ...PCA plot window
@@ -837,11 +835,26 @@ trident.gui <- function() {
         tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5)
         tcltk::tkgrid(TKPLOT)
       })
-      SAVE.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Save PCA data", command = function() {
-
+      SAVE.BTN <- tcltk2::tk2button(WIN44B, text = "Save", tip = "Save PCs data", command = function() {
+        utils::write.table(Mypca.df, append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE,
+                           file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = WIN44B, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
       })
-      EXPORT.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Export PCA files in R", command = function() {
-
+      EXPORT.BTN <- tcltk2::tk2button(WIN44B, text = "Export", tip = "Export PCA files in R", command = function() {
+        # ......create window for name entry
+        WIN44D <- tcltk::tktoplevel()
+        # ......entry
+        NAME.ENTRY <- tcltk2::tk2entry(WIN44D, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
+        # ......buttons
+        CONFIRM.BTN <- tcltk2::tk2button(WIN44D, text = "Confirm", tip = "Confirm name and export to R", command = function() {
+          # this will give an additional name to the exported object:
+          My_data_from_trident <<- Mypca
+          makeActiveBinding(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY)), function() My_data_from_trident, .GlobalEnv)
+          tcltk::tkdestroy(WIN44D)
+        })
+        CANCEL.BTN <- tcltk2::tk2button(WIN44D, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(WIN44D))
+        # ......grid all
+        tcltk::tkgrid(tcltk::tklabel(WIN44D, text = "Name:"), NAME.ENTRY)
+        tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
       })
       DONE.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Clicking this will close this window", command = function() tcltk::tkdestroy(WIN44B))
       # Grid all
@@ -932,7 +945,7 @@ trident.gui <- function() {
   tcltk::tkadd(MENU$HELP, "separator")
   tcltk::tkadd(MENU$HELP, "command", label = "Options", command = function(){})
   # ...Help files
-  tcltk::tkadd(MENU$FILE, "separator")
+  tcltk::tkadd(MENU$HELP, "separator")
   tcltk::tkadd(MENU$HELP, "command", label = "Francisco et al. (2018)", command = function(){
     Mypath <- 'inst/extdata/about/Francisco2018a.pdf'
     system(paste0('open "', Mypath, '"'))
@@ -1852,10 +1865,10 @@ trident.gui <- function() {
   # ...Disabled buttons
   tcltk::tkentryconfigure(MENU$EDIT, 0, state = "disable")
   tcltk::tkentryconfigure(MENU$EDIT, 1, state = "disable")
-  tcltk::tkentryconfigure(MENU$HELP, 1, state = "disable")
-  tcltk::tkentryconfigure(MENU$HELP, 4, state = "disable")
-  tcltk::tkentryconfigure(MENU$HELP, 5, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 2, state = "disable")
   tcltk::tkentryconfigure(MENU$HELP, 6, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 7, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 8, state = "disable")
   tcltk::tkconfigure(TAG.BTN, state = "disable")
   tcltk::tkconfigure(DFA.BTN, state = "disable")
   tcltk::tkconfigure(LOAD.BTN, state = "disable")
@@ -1868,7 +1881,5 @@ trident.gui <- function() {
   tcltk::tkconfigure(TOPO.BTN, state = "disable")
   tcltk::tkconfigure(DIR.BTN, state = "disable")
   tcltk::tkconfigure(LAUNCH.BTN, state = "disable")
-
-
 
 }
