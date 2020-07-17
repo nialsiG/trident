@@ -2,7 +2,7 @@
 
 export(multicheck)
 export(rm.outliers)
-export(trident)
 export(trident.arrange)
 export(trident.boxcox)
 export(trident.gui)
+export(trident.top3)

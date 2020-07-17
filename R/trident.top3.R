@@ -1,0 +1,44 @@
+#trident.top3----
+  #' @title trident.top3
+  #' @description Classify top 3 variables by their ability to discriminate categories for each group of the factor variable.
+  #' @param df A vector or a dataframe of numeric values
+  #' @param y A factor
+  #' @return the result of fun
+  #' @examples
+  #' #to do
+  #' @export
+  trident.top3 <- function(df, y) {
+    #check data structure
+    if (is.data.frame(df) == FALSE) stop("Dataframe df should be an object of class data.frame (see 'is.data.frame')")
+    if (is.factor(y) == FALSE) stop("Category variable 'y' is not a factor")
+    if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
+
+    #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
+    Mydf <- data.frame(y = as.factor(y), df)
+    Mydf <- Mydf[!is.infinite(rowSums(Mydf[, -1])), ]
+    Mydf <- stats::na.omit(Mydf)
+
+    # ...BoxCox transformation
+    Numerics <- trident::trident.boxcox(df = Mydf[, -1], y = Mydf[, 1])$boxcox
+    colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
+
+    # ...multicheck
+    Numerics <- Numerics[, which(trident::multicheck(df = Numerics, y = Mydf[, 1])$is.discriminant == TRUE)]
+
+    # ...outlier identification
+    #Numerics <- trident::rm.outliers(Numerics)
+
+    # ...for each group, rank variables and isolate top 3
+    Mylist <- list()
+    Mylist$top3var <- NULL
+    for (i in c(1:length(levels(Mydf[, 1])))) {
+      if (i == 1) Mypriority <- c(1:length(levels(Mydf[, 1])))
+      if (i == length(levels(Mydf[, 1]))) Mypriority <- c(i:1)
+      if(i != 1 & i != length(levels(Mydf[, 1]))) Mypriority <- c(i, (i-1):1, (i+1):length(levels(Mydf[, 1])))
+      Myrank <- trident::trident.arrange(df = Numerics, y = Mydf[, 1], by = "hsd.p.value", gp.priority = Mypriority)
+      Mylist$top3var <- c(Mylist$top3var, rownames(Myrank[1:3, ]))
+    }
+    # ...now export arranged table with variables from Mylist
+    Mylist$ranked <- data.frame(group = rep(levels(y), each = 3), trident::trident.arrange(df = Numerics, y = Mydf[, 1])[Mylist$top3var, ])
+    return(Mylist)
+  }

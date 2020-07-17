@@ -1332,6 +1332,7 @@ trident.gui <- function() {
       }
       # ......arrange
       Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = Myby)
+      Numerics <- Numerics[, rownames(Mytable)]
       tcltk::tkdestroy(WIN31A)
       # ......display in new window
       WIN31B <- tcltk::tktoplevel()
@@ -1420,6 +1421,7 @@ trident.gui <- function() {
       }
       # ......arrange
       Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = Myby)
+      Numerics <- Numerics[, rownames(Mytable)]
       tcltk::tkdestroy(WIN32A)
       # ......display in new window
       WIN32B <- tcltk::tktoplevel()
@@ -1518,6 +1520,7 @@ trident.gui <- function() {
 
       # ......arrange
       Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = Myby, geomean = Mygeomean, byngr = Mybyngr)
+      Numerics <- Numerics[, rownames(Mytable)]
       tcltk::tkdestroy(WIN33A)
       # ......display in new window
       WIN33B <- tcltk::tktoplevel()
@@ -1570,7 +1573,7 @@ trident.gui <- function() {
     tcltk::tcl("wm", "attributes", WIN33A, topmost = TRUE)
     tcltk::tcl("wm", "attributes", WIN33A, topmost = FALSE)
   })
-  # POSTDOC(BY GROUPS)
+  # POSTHOC(BY GROUPS)
   tcltk::tkadd(RANK.MENU, "command", label = "Post-hoc (by group)", command = function() {
     # ...a window to select the factor
     WIN34A <- tcltk::tktoplevel()
@@ -1618,6 +1621,7 @@ trident.gui <- function() {
         Mypriority <- numbers[which(Mynames == tcltk::tclvalue(tcltk::tkget(PRIORITY.CBBX))), ]
         # ......arrange
         Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = Myby, gp.priority = Mypriority)
+        Numerics <- Numerics[, rownames(Mytable)]
         tcltk::tkdestroy(WIN34A)
         # ......display in new window
         WIN34B <- tcltk::tktoplevel()
@@ -1678,54 +1682,74 @@ trident.gui <- function() {
     tcltk::tcl("wm", "attributes", WIN34A, topmost = FALSE)
   })
   # ...Create buttons
-  #TAG.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","tag.gif", package = "trident")), height = 50, relief = "flat",
-  #                            text = "Tag", compound = "top", command = function(){})
+  TAG.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","tag.gif", package = "trident")), height = 50, relief = "flat",
+                              text = "Tag", compound = "top", command = function() {})
   TOP3.BTN <- tcltk::tkbutton(NOTEBOOK$VARIA, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","top3.gif", package = "trident")), height = 50, relief = "flat",
-                             text = "Top 3", compound = "top", command = function(){
-
+                             text = "Top 3", compound = "top", command = function() {
                                # ...a window to select the factor
-                               WIN33A <- tcltk::tktoplevel()
+                               WIN36A <- tcltk::tktoplevel()
                                Mydf <- PROJECT$DATASET
                                Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
                                Mydf <- stats::na.omit(Mydf)
                                Numerics <- dplyr::select_if(Mydf, is.numeric)
                                Factors  <- dplyr::select_if(Mydf, is.factor)
                                # ...combobox for factor choice
-                               FACTOR.CMBBX <- tcltk2::tk2combobox(WIN33A, values = colnames(Factors))
+                               FACTOR.CBBX <- tcltk2::tk2combobox(WIN36A, values = colnames(Factors))
                                # ...OK button
-                               OK.BTN <- tcltk2::tk2button(WIN33A, text = "OK", command = function(){
-                                 Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CMBBX))
-                                 # ......Boxcox
+                               OK.BTN <- tcltk2::tk2button(WIN36A, text = "OK", command = function() {
+                                 Myfactor <- tcltk::tclvalue(tcltk::tkget(FACTOR.CBBX))
+                                 Mytop <- trident::trident.top3(df = Numerics, y = Factors[, Myfactor])
+                                 Mytable <- Mytop$ranked
+                                 # ......BoxCox transformation for the plots
                                  Numerics <- trident::trident.boxcox(df = Numerics, y = Factors[, Myfactor])$boxcox
-                                 # ......Discriminant variables
-                                 Mycheck <- multicheck(df = Numerics, y = Factors[, Myfactor])
-                                 MyDiscVar <- c(Mycheck$variable[which(Mycheck$is.discriminant == TRUE)])
-                                 Numerics <- Numerics[, MyDiscVar]
-                                 # ...DIXON !!!
-
-                                 # ......arrange
-                                 Mytable <- trident::trident.arrange(df = Numerics, y = Factors[, Myfactor], by = "mean.hsd.p.value")
-                                 # ......onlykeep best three discriminant variables
-                                 Mytable <- Mytable[1:3, ]
-                                 tcltk::tkdestroy(WIN33A)
+                                 colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
                                  # ......display in new window
-                                 WIN33B <- tcltk::tktoplevel()
-                                 tcltk::tkwm.title(WIN33B, paste("trident", METADATA$VERSION, "- arranged by mean HSD p-value"))
-                                 build.table.cmd(Mytable, WIN33B)
-                                 tcltk::tcl("wm", "attributes", WIN33B, topmost = TRUE)
-                                 tcltk::tcl("wm", "attributes", WIN33B, topmost = FALSE)
+                                 WIN36B <- tcltk::tktoplevel()
+                                 WIN36B$BUTTONS <- tcltk::tkframe(WIN36B)
+                                 BIPLOT.BTN <- tcltk2::tk2button(WIN36B$BUTTONS, text = "Biplot", tip = "", command = function() {
+                                   Mydf <- data.frame(Factors[, Myfactor], Numerics[, unique(Mytop$top3var)])
+                                   colnames(Mydf)[1] <- Myfactor
+                                   biplot.cmd(df = Mydf)
+                                 })
+                                 BOXPLOT.BTN <- tcltk2::tk2button(WIN36B$BUTTONS, text = "Boxplot", tip = "", command = function() {
+                                   Mydf <- data.frame(Factors[, Myfactor], Numerics[, unique(Mytop$top3var)])
+                                   colnames(Mydf)[1] <- Myfactor
+                                   boxplot.cmd(df = Mydf)
+                                 })
+                                 VIOLIN.BTN <- tcltk2::tk2button(WIN36B$BUTTONS, text = "Violin", tip = "", command = function() {
+                                   Mydf <- data.frame(Factors[, Myfactor], Numerics[, unique(Mytop$top3var)])
+                                   colnames(Mydf)[1] <- Myfactor
+                                   plot.violin.cmd(df = Mydf)
+                                 })
+                                 PCA.BTN <- tcltk2::tk2button(WIN36B$BUTTONS, text = "PCA", tip = "", command = function() {
+                                   Mydf <- data.frame(Factors[, Myfactor], Numerics[, unique(Mytop$top3var)])
+                                   colnames(Mydf)[1] <- Myfactor
+                                   plot.pca.cmd(df = Mydf)
+                                 })
+                                 # ...grid all
+                                 build.table.cmd(Mytable, WIN36B)
+                                 tcltk::tkpack(WIN36B$BUTTONS, side = "bottom")
+                                 tcltk::tkgrid(BIPLOT.BTN, BOXPLOT.BTN, VIOLIN.BTN, PCA.BTN)
+                                 # ...window attributes
+                                 tcltk::tkwm.title(WIN36B, paste("trident", METADATA$VERSION, "- top 3 best discriminating variables for each group"))
+                                 tcltk2::tk2ico.setFromFile(WIN36B, system.file("extdata","pics","mini_grazr.ico", package = "trident"))
+                                 tcltk::tcl("wm", "attributes", WIN36B, topmost = TRUE)
+                                 tcltk::tcl("wm", "attributes", WIN36B, topmost = FALSE)
+                                 # ...then destroy window A
+                                 tcltk::tkdestroy(WIN36A)
                                })
-                               CANCEL.BTN <- tcltk2::tk2button(WIN33A, text = "Cancel", command = function() tcltk::tkdestroy(WIN33A))
+                               CANCEL.BTN <- tcltk2::tk2button(WIN36A, text = "Cancel", command = function() tcltk::tkdestroy(WIN36A))
                                # ...grid all
-                               tcltk::tkgrid(tcltk::tklabel(WIN33A, text = "Choose factor:  "), FACTOR.CMBBX)
+                               tcltk::tkgrid(tcltk::tklabel(WIN36A, text = "Please choose a factor:  "), FACTOR.CBBX)
                                tcltk::tkgrid(OK.BTN, CANCEL.BTN)
-                               tcltk::tcl("wm", "attributes", WIN33A, topmost = TRUE)
-                               tcltk::tcl("wm", "attributes", WIN33A, topmost = FALSE)
+                               tcltk::tcl("wm", "attributes", WIN36A, topmost = TRUE)
+                               tcltk::tcl("wm", "attributes", WIN36A, topmost = FALSE)
                              })
   # ...Grid all
-  tcltk::tkgrid(RANK.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(TAG.BTN, RANK.MBTN, TOP3.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
   tcltk2::tk2tip(RANK.MBTN, "Classify variables from the most to the less discriminant, using...")
+  tcltk2::tk2tip(TAG.BTN, "Not available yet!")
   tcltk2::tk2tip(TOP3.BTN, "Top 3 best discriminant variables, following Francisco et al. 2018a")
 
   # --Notetab 'Plots'----
@@ -1800,4 +1824,25 @@ trident.gui <- function() {
   tcltk::tcl("wm", "attributes", WIN00, topmost = TRUE)
   tcltk::tcl("wm", "attributes", WIN00, topmost = FALSE)
   tcltk::tcl("wm", "protocol", WIN00, "WM_DELETE_WINDOW", function() quit.cmd())
+  # ...Disabled buttons
+  tcltk::tkentryconfigure(MENU$EDIT, 0, state = "disable")
+  tcltk::tkentryconfigure(MENU$EDIT, 1, state = "disable")
+  tcltk::tkentryconfigure(MENU$ABOUT, 2, state = "disable")
+  tcltk::tkentryconfigure(MENU$ABOUT, 3, state = "disable")
+  tcltk::tkentryconfigure(MENU$ABOUT, 4, state = "disable")
+  tcltk::tkconfigure(TAG.BTN, state = "disable")
+  tcltk::tkconfigure(DFA.BTN, state = "disable")
+  tcltk::tkconfigure(LOAD.BTN, state = "disable")
+  tcltk::tkconfigure(CLEAN.BTN, state = "disable")
+  tcltk::tkconfigure(ABBOTT.BTN, state = "disable")
+  tcltk::tkconfigure(ELLI.BTN, state = "disable")
+  tcltk::tkconfigure(FACET.BTN, state = "disable")
+  tcltk::tkconfigure(INDFRAC.BTN, state = "disable")
+  tcltk::tkconfigure(COMPLEX.BTN, state = "disable")
+  tcltk::tkconfigure(TOPO.BTN, state = "disable")
+  tcltk::tkconfigure(DIR.BTN, state = "disable")
+  tcltk::tkconfigure(LAUNCH.BTN, state = "disable")
+
+
+
 }
