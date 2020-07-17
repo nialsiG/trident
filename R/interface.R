@@ -3,7 +3,7 @@
 #' @export
 trident.gui <- function() {
   # TCLTK OBJECTS----
-  METADATA <- list(VERSION = '0.2.9', DESCRIPTION = "Hold your (sea)horses")
+  METADATA <- list(VERSION = '0.3.0', DESCRIPTION = "(Pre)release the Kraken!")
   PROJECT <- NULL
   PROJECT <- list(FILES = list(),
                   DATASET = NULL,
@@ -837,13 +837,19 @@ trident.gui <- function() {
         tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5)
         tcltk::tkgrid(TKPLOT)
       })
+      SAVE.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Save PCA data", command = function() {
+
+      })
+      EXPORT.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Export PCA files in R", command = function() {
+
+      })
       DONE.BTN <- tcltk2::tk2button(WIN44B, text = "Done!", tip = "Clicking this will close this window", command = function() tcltk::tkdestroy(WIN44B))
       # Grid all
       tcltk::tkgrid(TKPLOT, columnspan = 2)
       tcltk::tkgrid(tcltk::tklabel(WIN44B, text = "Select PCs:"), columnspan = 2)
       tcltk::tkgrid(MYPCLIST1, MYPCLIST2)
       tcltk::tkgrid(PLOT.BTN, DONE.BTN)
-
+      tcltk::tkgrid(SAVE.BTN, EXPORT.BTN)
     })
     CANCEL.BTN <- tcltk2::tk2button(WIN44A, text = "Cancel", command = function() tcltk::tkdestroy(WIN44A))
     # ...grid all
@@ -906,22 +912,41 @@ trident.gui <- function() {
   tcltk::tkbind(WIN00,"<Control-y>", function() tcltk::tkmessageBox(message = 'Redo'))
 
   # --Menu 'About'----
-  MENU$ABOUT <- tcltk::tkmenu(MENU, tearoff = FALSE)
+  MENU$HELP <- tcltk::tkmenu(MENU, tearoff = FALSE)
   # ...About
-  tcltk::tkadd(MENU$ABOUT, "command", label = "Francisco et al. (2018)", command = function(){
+  tcltk::tkadd(MENU$HELP, "command", label = "About", command = function(){
+    tcltk::tkmessageBox(type = "ok",
+    message = "package 'trident': A library for dental microwear
+    texture analysis, allowing to further analyze the
+    results using a variety of methods.
+    The package includes functions to measure microwear
+    texture, to transform the data, to rank variables,
+    as well as a complete tcl/tk graphical user interface.\n
+    version: 0.3.0
+    release date: 17/07/20
+    Authors: Ghislain Thiery, Arthur Francisco, Gildas
+    Merceron
+    Licence: GPL-3")
+  })
+  # ...Options
+  tcltk::tkadd(MENU$HELP, "separator")
+  tcltk::tkadd(MENU$HELP, "command", label = "Options", command = function(){})
+  # ...Help files
+  tcltk::tkadd(MENU$FILE, "separator")
+  tcltk::tkadd(MENU$HELP, "command", label = "Francisco et al. (2018)", command = function(){
     Mypath <- 'inst/extdata/about/Francisco2018a.pdf'
     system(paste0('open "', Mypath, '"'))
     })
-  tcltk::tkadd(MENU$ABOUT, "command", label = "Santos (2020)", command = function(){
+  tcltk::tkadd(MENU$HELP, "command", label = "Santos (2020)", command = function(){
     Mypath <- 'inst/extdata/about/Santos2019.pdf'
     system(paste0('open "', Mypath, '"'))
   })
-  tcltk::tkadd(MENU$ABOUT, "command", label = "<ESPACE RESERVE>", command = function(){})
-  tcltk::tkadd(MENU$ABOUT, "command", label = "<ESPACE RESERVE>", command = function(){})
-  tcltk::tkadd(MENU$ABOUT, "command", label = "<ESPACE RESERVE>", command = function(){})
+  tcltk::tkadd(MENU$HELP, "command", label = "<ESPACE RESERVE>", command = function(){})
+  tcltk::tkadd(MENU$HELP, "command", label = "<ESPACE RESERVE>", command = function(){})
+  tcltk::tkadd(MENU$HELP, "command", label = "<ESPACE RESERVE>", command = function(){})
   #
   # ...Add About to menu
-  tcltk::tkadd(MENU, "cascade", label = "About", menu = MENU$ABOUT)
+  tcltk::tkadd(MENU, "cascade", label = "Help", menu = MENU$HELP)
   # TKGUI - NOTEBOOK
   # --Notebook----
   NOTEBOOK <- tcltk2::tk2notebook(WIN00, height = 100, tabs = c("Data", "Statistics", "Variables", "Plots", "Microwear", "Batch analysis"))
@@ -1827,9 +1852,10 @@ trident.gui <- function() {
   # ...Disabled buttons
   tcltk::tkentryconfigure(MENU$EDIT, 0, state = "disable")
   tcltk::tkentryconfigure(MENU$EDIT, 1, state = "disable")
-  tcltk::tkentryconfigure(MENU$ABOUT, 2, state = "disable")
-  tcltk::tkentryconfigure(MENU$ABOUT, 3, state = "disable")
-  tcltk::tkentryconfigure(MENU$ABOUT, 4, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 1, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 4, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 5, state = "disable")
+  tcltk::tkentryconfigure(MENU$HELP, 6, state = "disable")
   tcltk::tkconfigure(TAG.BTN, state = "disable")
   tcltk::tkconfigure(DFA.BTN, state = "disable")
   tcltk::tkconfigure(LOAD.BTN, state = "disable")

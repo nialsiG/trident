@@ -1,14 +1,17 @@
 Package: trident
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Dental Microwear Texture Analysis
+Version: 0.3.0
+Authors@R: c(
+    person(given = "Ghislain", family = "Thiery", role = c("aut", "cre"), email = "ghislain.thiery@ntymail.com"),
+    person(given = "Arthur", family = "Francisco", role = c("aut"), email = "arthur.francisco@univ-poitiers.fr"),
+    person(given = "Gildas", family = "Merceron", role = c("aut"), email = "gildas.merceron@univ-poitiers.fr"))
+Description: A library for dental microwear texture analysis, allowing to further analyze the results using a variety of methods.
+    The package includes function to measure microwear texture, to transform the data, to rank variables, as well as a complete tcl/tk graphical user interface.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Depends: R (>= 3.6.0)
 Imports: 
     DescTools,
     tcltk2,
