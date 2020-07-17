@@ -1811,8 +1811,10 @@ trident.gui <- function() {
                                   })
   DFA.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","dfa.gif", package = "trident")), height = 50, relief = "flat",
                                 text = "DFA", compound = "top", command = function() {})
+  FLOWCHART.BTN <- tcltk::tkbutton(NOTEBOOK$PLOTS, image = tcltk::tkimage.create("photo", file = system.file("extdata","pics","flowchart.gif", package = "trident")), height = 50, relief = "flat",
+                             text = "DFA", compound = "top", command = function() {})
   # ...Grid all
-  tcltk::tkgrid(BIPLOT.BTN, BOXPLOT.BTN, VIOLIN.BTN, PCA.BTN, DFA.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
+  tcltk::tkgrid(BIPLOT.BTN, BOXPLOT.BTN, VIOLIN.BTN, PCA.BTN, DFA.BTN, FLOWCHART.BTN, padx = 0, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
   # ...Tooltips
   tcltk2::tk2tip(BIPLOT.BTN, "Bivariate graph")
   tcltk2::tk2tip(BOXPLOT.BTN, "Box-and-whiskers graph")
@@ -1871,6 +1873,7 @@ trident.gui <- function() {
   tcltk::tkentryconfigure(MENU$HELP, 8, state = "disable")
   tcltk::tkconfigure(TAG.BTN, state = "disable")
   tcltk::tkconfigure(DFA.BTN, state = "disable")
+  tcltk::tkconfigure(FLOWCHART.BTN, state = "disable")
   tcltk::tkconfigure(LOAD.BTN, state = "disable")
   tcltk::tkconfigure(CLEAN.BTN, state = "disable")
   tcltk::tkconfigure(ABBOTT.BTN, state = "disable")
