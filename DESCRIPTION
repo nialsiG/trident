@@ -1,7 +1,7 @@
 Package: trident
 Type: Package
 Title: Dental Microwear Texture Analysis
-Version: 0.3.0
+Version: 0.9.4
 Authors@R: c(
     person(given = "Ghislain", family = "Thiery", role = c("aut", "cre"), email = "ghislain.thiery@ntymail.com"),
     person(given = "Arthur", family = "Francisco", role = c("aut"), email = "arthur.francisco@univ-poitiers.fr"),
@@ -11,7 +11,7 @@ Description: A library for dental microwear texture analysis, allowing to furthe
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 3.6.0)
+Depends: R (>= 4.0.0)
 Imports: 
     DescTools,
     tcltk2,
@@ -27,5 +27,16 @@ Imports:
     tkrplot,
     factoextra,
     gtools,
-    DiagrammeR
-RoxygenNote: 7.0.2
+    DiagrammeR,
+    stringr,
+    MASS,
+    picante,
+    tools,
+    dplyr,
+    foreach,
+    parallel,
+    doSNOW,
+    snow,
+    grDevices,
+    rgl
+RoxygenNote: 7.1.1

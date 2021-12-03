@@ -2,42 +2,16 @@
 % Please edit documentation in R/multicheck.R
 \name{multicheck}
 \alias{multicheck}
-\title{multicheck}
+\title{multicheck2}
 \usage{
-multicheck(
-  df,
-  y,
-  check.anderson = TRUE,
-  check.anova = TRUE,
-  check.bartlett = TRUE,
-  check.kruskal = TRUE,
-  check.levene = TRUE,
-  check.shapiro = TRUE,
-  check.skwratio = TRUE,
-  check.varratio = TRUE,
-  alpha = 0.05
-)
+multicheck(df, y, alpha = 0.05)
 }
 \arguments{
 \item{df}{A dataframe or a subset of a dataset entirely composed of numeric variables}
 
 \item{y}{A factor}
 
-\item{check.anderson}{Logical indicating whether an Anderson-Darling test (normality) should be performed}
-
-\item{check.anova}{Logical indicating whether the p-value of an ANOVA should be calculated}
-
-\item{check.bartlett}{Logical indicating whether a Bartlett test (homoscedasticity) should be performed}
-
-\item{check.kruskal}{Logical indicating whether the p-value of Kruskall-Wallis should be calculated}
-
-\item{check.levene}{Logical indicating whether a Levene test (homoscedasticity) should be performed}
-
-\item{check.shapiro}{Logical indicating whether a Shapiro-Wilk test (normality) should be performed}
-
-\item{check.skwratio}{Logical indicating whether skewness ratio should be calculated}
-
-\item{check.varratio}{Logical indicating whether variance ratio should be calculated}
+\item{alpha}{Significance level}
 }
 \value{
 A list of ratios and p-values for all the options which where selected using check.- parameters

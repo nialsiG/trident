@@ -2,6 +2,13 @@
 #' @title trident.arrange
 #' @description Classify variables by their ability to discriminate categories
 #' @param df A vector or a dataframe of numeric values
+#' @param y A factor
+#' @param by A vector of character strings, indicating what parameter should be used to classify data.
+#' Should be in c("f.stat", "aov.p.value", "k", "k.p.value", "hsd.p.value", "hsd.mean.p.value", "lsd.p.value", "lsd.mean.p.value")
+#' @param alpha Level of significance
+#' @param byngr Logical, should data be classified by the largest number of significantly different groups?
+#' @param geomean Logical, should average values be calculated as geometric means?
+#' @param gp.priority A vector
 #' @return the result of fun
 #' @examples
 #' #to do
@@ -13,12 +20,12 @@ trident.arrange <- function(df, y, by = "hsd.mean.p.value", alpha = 0.05, byngr 
   if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
 
   #changing levels of factor if gp.priority
-  y <- factor(y, levels = levels(y)[gp.priority])
+  if (length(gp.priority) == length(levels(y))) y <- factor(y, levels = levels(y)[gp.priority])
+  if (length(gp.priority) < length(levels(y))) y <- factor(y, levels = c(levels(y)[gp.priority], levels(y)[- gp.priority]))
 
   #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
-  Mydf <- data.frame(y = as.factor(y), df)
-  Mydf <- Mydf[!is.infinite(rowSums(Mydf[, -1])), ]
-  Mydf <- stats::na.omit(Mydf)
+  Mydf <- data.frame(as.factor(y), df)
+  Mydf <- Mydf[is.finite(rowSums(Mydf[, -1])),]
 
   #2A Compute ANOVA's F & P
   compute.aov <- function(x, y) {
@@ -63,14 +70,8 @@ trident.arrange <- function(df, y, by = "hsd.mean.p.value", alpha = 0.05, byngr 
   LSD <- t(plyr::colwise(compute.lsd)(Mydf[, -1], y = Mydf[, 1]))
 
   # 3 Groupnames
-  Groupnames <- NULL
-  for (i in c(1:length(levels(y)) - 1)) {
-    Right <- levels(y)[-(0:i)]
-    Left <- rep(levels(y)[i], length(Right))
-    Groupnames <- c(Groupnames, paste0(Left, ".vs.", Right))
-  }
-  # ...note: we have got to remove the first element of vector 'Groupnames' (".vs.")
-  Groupnames <- Groupnames[-1]
+  Groupnames <- utils::combn(levels(y), 2, paste, collapse = '.vs.')
+
   # ...then give column names to HSD and LSD
   colnames(HSD) <- paste0("hsd.", c(Groupnames, "mean", "geomean", "signif.groups"))
   colnames(LSD) <- paste0("lsd.", c(Groupnames, "mean", "geomean", "signif.groups"))

@@ -2,18 +2,20 @@
 % Please edit documentation in R/trident.top3.R
 \name{trident.top3}
 \alias{trident.top3}
-\title{trident.arrange}
+\title{trident.top3}
 \usage{
-trident.top3()
+trident.top3(df, y)
 }
 \arguments{
 \item{df}{A vector or a dataframe of numeric values}
+
+\item{y}{A factor}
 }
 \value{
 the result of fun
 }
 \description{
-Classify variables by their ability to discriminate categories
+Classify top 3 variables by their ability to discriminate categories for each group of the factor variable.
 }
 \examples{
 #to do

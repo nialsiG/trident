@@ -14,9 +14,8 @@
     if (length(which(apply(df, 2, FUN = is.numeric) == FALSE)) != 0) stop("All variables of dataframe 'df' should be numeric")
 
     #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
-    Mydf <- data.frame(y = as.factor(y), df)
-    Mydf <- Mydf[!is.infinite(rowSums(Mydf[, -1])), ]
-    Mydf <- stats::na.omit(Mydf)
+    Mydf <- data.frame(as.factor(y), df)
+    Mydf <- Mydf[is.finite(rowSums(Mydf[, -1])),]
 
     # ...BoxCox transformation
     Numerics <- trident::trident.boxcox(df = Mydf[, -1], y = Mydf[, 1])$boxcox
@@ -31,14 +30,18 @@
     # ...for each group, rank variables and isolate top 3
     Mylist <- list()
     Mylist$top3var <- NULL
-    for (i in c(1:length(levels(Mydf[, 1])))) {
-      if (i == 1) Mypriority <- c(1:length(levels(Mydf[, 1])))
-      if (i == length(levels(Mydf[, 1]))) Mypriority <- c(i:1)
-      if(i != 1 & i != length(levels(Mydf[, 1]))) Mypriority <- c(i, (i-1):1, (i+1):length(levels(Mydf[, 1])))
+    Mypairs <- utils::combn(levels(Mydf[, 1]), 2, paste, collapse = ' vs. ')
+    for (i in c(1:length(Mypairs))) {
+      Mycurrentpair <- unlist(strsplit(Mypairs[i], " vs. "))
+      Mypriority <- which(levels(Mydf[, 1]) %in% Mycurrentpair)
+    #for (i in c(1:length(levels(Mydf[, 1])))) {
+    #  if (i == 1) Mypriority <- c(1:length(levels(Mydf[, 1])))
+    #  if (i == length(levels(Mydf[, 1]))) Mypriority <- c(i:1)
+    #  if(i != 1 & i != length(levels(Mydf[, 1]))) Mypriority <- c(i, (i-1):1, (i+1):length(levels(Mydf[, 1])))
       Myrank <- trident::trident.arrange(df = Numerics, y = Mydf[, 1], by = "hsd.p.value", gp.priority = Mypriority)
       Mylist$top3var <- c(Mylist$top3var, rownames(Myrank[1:3, ]))
     }
     # ...now export arranged table with variables from Mylist
-    Mylist$ranked <- data.frame(group = rep(levels(y), each = 3), trident::trident.arrange(df = Numerics, y = Mydf[, 1])[Mylist$top3var, ])
+    Mylist$ranked <- data.frame(group = rep(Mypairs, each = 3), trident::trident.arrange(df = Numerics, y = Mydf[, 1])[Mylist$top3var, ])
     return(Mylist)
   }

@@ -16,6 +16,19 @@ trident.arrange(
 }
 \arguments{
 \item{df}{A vector or a dataframe of numeric values}
+
+\item{y}{A factor}
+
+\item{by}{A vector of character strings, indicating what parameter should be used to classify data.
+Should be in c("f.stat", "aov.p.value", "k", "k.p.value", "hsd.p.value", "hsd.mean.p.value", "lsd.p.value", "lsd.mean.p.value")}
+
+\item{alpha}{Level of significance}
+
+\item{byngr}{Logical, should data be classified by the largest number of significantly different groups?}
+
+\item{geomean}{Logical, should average values be calculated as geometric means?}
+
+\item{gp.priority}{A vector}
 }
 \value{
 the result of fun
