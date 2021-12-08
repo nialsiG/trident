@@ -7,7 +7,9 @@ trident.gui <- function() {
   METADATA <- list(VERSION = '9.4.0', DESCRIPTION = "Rusty Nails")
   # ...Project data to be saved
   PROJECT <- NULL
-  PROJECT <- list(FILES = list(),
+  PROJECT <- list(SAVESTATE = FALSE,
+                  SAVENAME = NULL,
+                  FILES = list(),
                   DATASET = NULL,
                   VARIABLES = NULL,
                   NAMES = NULL,
@@ -87,7 +89,7 @@ trident.gui <- function() {
       tcltk2::tk2ico.setFromFile(TRIDENT.SaveCurrent1234, system.file("extdata","pics","trident.ico", package = "trident"))
       YES.BTN <- tcltk2::tk2button(TRIDENT.SaveCurrent1234, text = "Yes", command = function() {
         tcltk::tkdestroy(TRIDENT.SaveCurrent1234)
-        save.project.cmd()
+        save.cmd()
         PROJECT <<- rlist::list.load(utils::choose.files())
         refresh.cmd()
         # ...re-able
@@ -190,9 +192,11 @@ trident.gui <- function() {
         tcltk::tkdestroy(TRIDENT.SaveCurrent1234)
         Preferred.options <- PROJECT$OPTIONS
         Preferred.names <- PROJECT$NAMES
-        save.project.cmd()
+        save.cmd()
         PROJECT <<- NULL
-        PROJECT <<- list(FILES = list(),
+        PROJECT <<- list(SAVESTATE = FALSE,
+                         SAVENAME = NULL,
+                         FILES = list(),
                          DATASET = NULL,
                          VARIABLES = NULL,
                          NAMES = Preferred.names,
@@ -236,7 +240,9 @@ trident.gui <- function() {
           Preferred.options <- PROJECT$OPTIONS
           Preferred.names <- PROJECT$NAMESPROJECT <- NULL
           PROJECT <<- NULL
-          PROJECT <<- list(FILES = list(),
+          PROJECT <<- list(SAVESTATE = FALSE,
+                           SAVENAME = NULL,
+                           FILES = list(),
                            DATASET = NULL,
                            VARIABLES = NULL,
                            NAMES = Preferred.names,
@@ -283,10 +289,19 @@ trident.gui <- function() {
     }
   }
 
-  # ...save.project.cmd----
+  # ...save.cmd----
   # ..internal command to save a project
-  save.project.cmd <- function() {
-    rlist::list.save(x = PROJECT, file = tcltk::tclvalue(tcltk::tkgetSaveFile(title = "Save project...", initialfile = paste("Untitled.rds", sep = ""))))
+  save.cmd <- function() {
+    if (!isTRUE(PROJECT$SAVESTATE)) save.as.cmd()
+    if (isTRUE(PROJECT$SAVESTATE)) rlist::list.save(x = PROJECT, file = PROJECT$SAVENAME)
+  }
+
+  # ...save.as.cmd----
+  # ..internal command to save a project as new .rds file
+  save.as.cmd <- function() {
+    PROJECT$SAVENAME <<- tcltk::tclvalue(tcltk::tkgetSaveFile(title = "Save project...", initialfile = paste("Untitled.rds", sep = "")))
+    rlist::list.save(x = PROJECT, file = PROJECT$SAVENAME)
+    PROJECT$SAVESTATE <<- TRUE
   }
 
   # ...quit.cmd----
@@ -298,7 +313,7 @@ trident.gui <- function() {
       tcltk::tkwm.title(TRIDENT.SaveCurrent1234, paste("trident", METADATA$VERSION, "- Save project..."))
       tcltk2::tk2ico.setFromFile(TRIDENT.SaveCurrent1234, system.file("extdata","pics","trident.ico", package = "trident"))
       YES.BTN <- tcltk2::tk2button(TRIDENT.SaveCurrent1234, text = "Save", command = function() {
-        save.project.cmd()
+        save.cmd()
         if (exists("TRIDENT.mainwin1234")) tcltk::tkdestroy(TRIDENT.mainwin1234) ; rm(TRIDENT.mainwin1234)
         if (exists("TRIDENT.CorCircle1234")) tcltk::tkdestroy(TRIDENT.CorCircle1234) ; rm(TRIDENT.CorCircle1234)
         if (exists("TRIDENT.ManFactor1234")) tcltk::tkdestroy(TRIDENT.ManFactor1234) ; rm(TRIDENT.ManFactor1234)
@@ -1348,8 +1363,8 @@ trident.gui <- function() {
   tcltk::tkadd(MENU$FILE, "command", label = "Open project...     (Ctrl+O)", command = function() open.project.cmd())
   # ...Save project
   MENU$FILE$SAVE <- tcltk::tkmenu(MENU$FILE, tearoff = FALSE)
-  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save...        (Ctrl+S)", command = function() save.project.cmd())
-  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save as...", command = function() save.project.cmd())
+  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save...        (Ctrl+S)", command = function() save.cmd())
+  tcltk::tkadd(MENU$FILE$SAVE, "command", label = "Save as...", command = function() save.as.cmd())
   tcltk::tkadd(MENU$FILE, "cascade", label = "Save project", menu = MENU$FILE$SAVE)
   # ...Exit
   tcltk::tkadd(MENU$FILE, "separator")
@@ -1360,7 +1375,7 @@ trident.gui <- function() {
   # ...Shortcuts
   tcltk::tkbind(TRIDENT.mainwin1234,"<Control-n>", function() new.project.cmd())
   tcltk::tkbind(TRIDENT.mainwin1234,"<Control-o>", function() open.project.cmd())
-  tcltk::tkbind(TRIDENT.mainwin1234,"<Control-s>", function() save.project.cmd())
+  tcltk::tkbind(TRIDENT.mainwin1234,"<Control-s>", function() save.cmd())
   tcltk::tkbind(TRIDENT.mainwin1234,"<Control-q>", function() quit.cmd())
 
   # ...Menu 'Edit'----
