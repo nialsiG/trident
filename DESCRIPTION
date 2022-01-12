@@ -38,5 +38,6 @@ Imports:
     doSNOW,
     snow,
     grDevices,
-    rgl
+    rgl,
+    tkRplotR
 RoxygenNote: 7.1.1

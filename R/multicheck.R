@@ -23,11 +23,7 @@ multicheck <- function(df, y, alpha = 0.05) {
   Myfactor <- as.factor(Mydf[, 1])
 
   # Prepare parallel
-  #Core.number <- parallel::makeCluster(parallel::detectCores() - 1)
-  #doParallel::registerDoParallel(Core.number)
-
   doSNOW::registerDoSNOW(snow::makeSOCKcluster(parallel::detectCores() - 1))
-
 
   # Parameters
   IS.NORMAL <- c(colnames(df))

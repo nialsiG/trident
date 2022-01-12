@@ -153,9 +153,12 @@ dmta.asfc <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "sin
   #5-Scan and return the results
   Scanned <- scan(file = file.path(Tmp, "results_complex.txt"), what = "character()")
   Filename <- paste0(utils::tail(unlist(strsplit(Scanned[1:which(stringr::str_detect(Scanned, ".sur"))], "/")), which(stringr::str_detect(Scanned, ".sur"))), collapse = " ")
-  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 6))
-  Asfc <- list(file = Filename, type = "complexity", asfc = - 1000 * as.numeric(Results[, 2]))
-  names(Asfc) <- c("File", "Type", "Asfc")
+  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 4))
+  Asfc <- list(file = Filename,
+               type = "complexity",
+               asfc2 = - 1000 * as.numeric(Results[, 1]),
+               r2adj = as.numeric(Results[, 2]))
+  names(Asfc) <- c("File", "Type", "Asfc2", "R2adj")
   return(Asfc)
 }
 
@@ -265,8 +268,8 @@ dmta.height <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "s
   #5-Scan and return the results
   Scanned <- scan(file = file.path(Tmp, "results_height.txt"), what = "character()")
   Scanned2 <- scan(file = file.path(Tmp, "results_faces.txt"), what = "character()")
-  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 19))
-  Results2 <- t(matrix(Scanned2[-(1:which(stringr::str_detect(Scanned2, ".sur")))], nrow = 12))
+  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 16))
+  Results2 <- t(matrix(Scanned2[-(1:which(stringr::str_detect(Scanned2, ".sur")))], nrow = 4))
   Filename <- paste0(utils::tail(unlist(strsplit(Scanned[1:which(stringr::str_detect(Scanned, ".sur"))], "/")), which(stringr::str_detect(Scanned, ".sur"))), collapse = " ")
   Height <- list(file = Filename,
                  type = "height",
@@ -307,15 +310,15 @@ dmta.topology <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = 
   #2-Recoding
   Sur <- stringr::str_replace_all(sur, "\\\\", "/")
   Sample.size <- "-0001"
-  #version multi ne marche pas
-  #if (type != "single") {
-  #  if (type == "multi") {
-  #    Sample.size <- paste0("+", size.n)
-  #  }
-  #  else {
-  #    stop("type must be 'single' or 'multi")
-  #  }
-  #}
+
+  if (type != "single") {
+    if (type == "multi") {
+      Sample.size <- paste0("+", size.n)
+    }
+    else {
+      stop("type must be 'single' or 'multi")
+    }
+  }
   #3-Build the scripts
   #...script 01
   Myscript1 <- paste0(
@@ -385,9 +388,9 @@ dmta.topology <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = 
   #5-Scan and return the results
   Scanned <- scan(file = file.path(Tmp, "results_topology.txt"), what = "character()")
   Scanned2 <- scan(file = file.path(Tmp, "results_faces.txt"), what = "character()")
-  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 8))
-  Results2 <- t(matrix(Scanned2[-(1:which(stringr::str_detect(Scanned2, ".sur")))], nrow = 12))
-  Filename <- paste0(utils::tail(unlist(strsplit(Scanned[1:which(stringr::str_detect(Scanned, ".sur"))], "/")), which(stringr::str_detect(Scanned, ".sur"))), collapse = " ")
+  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 12))
+  Results2 <- t(matrix(Scanned2[-(1:which(stringr::str_detect(Scanned2, ".sur")))], nrow = 4))
+  Filename <- paste0(utils::tail(unlist(strsplit(Scanned2[1:which(stringr::str_detect(Scanned2, ".sur"))], "/")), which(stringr::str_detect(Scanned2, ".sur"))), collapse = " ")
   Topology <- list(file = Filename,
                    type = "topology",
                    Sk1 = as.numeric(Results[, 3]),
@@ -397,13 +400,6 @@ dmta.topology <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = 
                    Snb1 = as.numeric(Results[, 1]),
                    Snb2 = as.numeric(Results[, 4]),
                    Sh = as.numeric(Results2[, 1]))
-  # The f90 routine exports results such as NAs or Inf using unrecognized suit of characters, which need to be replaced by NAs here:
-  Topology$Sk1[which(!is.finite(Topology$Sk1))] <- 0
-  Topology$Sk2[which(!is.finite(Topology$Sk2))] <- 0
-  Topology$Scm1[which(!is.finite(Topology$Scm1))] <- 0
-  Topology$Scm2[which(!is.finite(Topology$Scm2))] <- 0
-  Topology$Snb1[which(!is.finite(Topology$Snb1))] <- 0
-  Topology$Snb2[which(!is.finite(Topology$Snb2))] <- 0
 
   names(Topology) <- c("File", "Type", "Sk1", "Sk2", "Scm1", "Scm2", "Snb1", "Snb2", "Sh")
   return(Topology)

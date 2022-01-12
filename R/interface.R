@@ -4,7 +4,7 @@
 trident.gui <- function() {
   # TCLTK OBJECTS----
   # ...Metadata
-  METADATA <- list(VERSION = '9.4.0', DESCRIPTION = "Rusty Nails")
+  METADATA <- list(VERSION = '9.9.1', DESCRIPTION = "Topologic Multiverse")
   # ...Project data to be saved
   PROJECT <- NULL
   PROJECT <- list(SAVESTATE = FALSE,
@@ -631,6 +631,115 @@ trident.gui <- function() {
   }
 
 
+  # ...make.plot.cmd----
+  make.plot.cmd <- function(myplot) {
+    TRIDENT.PLOT <<- tcltk::tktoplevel()
+    tcltk::tkwm.title(TRIDENT.PLOT, paste("trident", METADATA$VERSION))
+    tcltk2::tk2ico.setFromFile(TRIDENT.PLOT, system.file("extdata","pics","trident.ico", package = "trident"))
+
+    # Build re-sizable plot
+    tkRplotR::tkRplot(W = TRIDENT.PLOT,
+                      fun = function() graphics::plot(myplot),
+                      width = 600,
+                      height = 500)
+
+    # SAVE button
+    TRIDENT.PLOT$BUTTONS <- tcltk::tkframe(TRIDENT.PLOT)
+    tcltk::tkpack(TRIDENT.PLOT$BUTTONS, side = "bottom")
+    SAVE.BTN <- tcltk2::tk2button(TRIDENT.PLOT$BUTTONS,
+                                  text = "SAVE",
+                                  tip = "Save graph to...",
+                                  command = function() {
+
+                                    # ...a window to select saving parameters, such as resolution, size, etc.
+                                    TRIDENT.SaveWin1234 <- tcltk::tktoplevel()
+                                    tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("trident", METADATA$VERSION, "- Image size..."))
+                                    tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
+                                    DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
+                                    HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
+                                    WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
+                                    UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
+                                    OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
+                                      PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
+
+                                      if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
+                                        PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
+
+                                      if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
+                                        PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
+
+                                      PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
+                                      tcltk::tkdestroy(TRIDENT.SaveWin1234)
+                                      ggplot2::ggsave(myplot,
+                                                      file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
+                                                                                                  title = "Save plot as...",
+                                                                                                  initialfile = paste("New_plot"),
+                                                                                                  filetypes = paste (
+                                                                                                    "{{png files} {.png}}",
+                                                                                                    "{{eps files} {.eps}}",
+                                                                                                    "{{jpeg files} {.jpg .jpeg} }",
+                                                                                                    "{{pdf files} {.pdf}}",
+                                                                                                    "{{svg files} {.svg}}",
+                                                                                                    "{{tiff files} {.tiff}}",
+                                                                                                    "{{wmf files} {.wmf}}",
+                                                                                                    "{{All files} {*}}", sep =" "),
+                                                                                                  defaultextension = ".png")),
+                                                      dpi = PROJECT$OPTIONS$PLOT.DPI,
+                                                      height = PROJECT$OPTIONS$PLOT.HEIGHT,
+                                                      width = PROJECT$OPTIONS$PLOT.WIDTH,
+                                                      units = PROJECT$OPTIONS$PLOT.UNITS,
+                                                      limitsize = TRUE)
+                                    })
+
+                                    CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234,
+                                                                    text = "Cancel",
+                                                                    tip = "",
+                                                                    command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
+
+                                    # ...grid all
+                                    tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"),
+                                                  HEIGHT.NTRY,
+                                                  tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"),
+                                                  WIDTH.NTRY)
+                                    tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"),
+                                                  UNITS.CBBX,
+                                                  columnspan = 2)
+                                    tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"),
+                                                  DPI.SPNBX,
+                                                  columnspan = 2)
+                                    tcltk::tkgrid(OK.BTN,
+                                                  CANCEL.BTN,
+                                                  columnspan = 2)
+                                    tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
+                                    tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
+                                  })
+
+    #EXPORT button
+    EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PLOT$BUTTONS,
+                                    text = "Export",
+                                    tip = "Export data.frame object to R",
+                                    command = function() {
+      # ...a second window for PCA plot name entry
+      TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
+      tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
+      tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
+      NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
+      CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
+        My_graph_from_trident <- myplot
+        assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
+        tcltk::tkdestroy(TRIDENT.NameEntry1234)
+      })
+      CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
+      # ...grid all
+      tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
+      tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
+    })
+
+    # Grid all
+    tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5, sticky = "ew")
+  }
+
+
   # ...biplot.cmd----
   biplot.cmd <- function(df) {
     # ...a window to select x, y and the factor
@@ -646,52 +755,77 @@ trident.gui <- function() {
     Myx <- NULL
     Myy <- NULL
     Myfactor <- NULL
-    XLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Numerics), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-    YLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Numerics), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-    FACTORLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-    FACTORLIST2 <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    XLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234,
+                                values = colnames(Numerics),
+                                selectmode = "single",
+                                height = 12,
+                                tip = "",
+                                scroll = "y",
+                                autoscroll = "x",
+                                enabled = TRUE)
+    YLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234,
+                                values = colnames(Numerics),
+                                selectmode = "single",
+                                height = 12,
+                                tip = "",
+                                scroll = "y",
+                                autoscroll = "x",
+                                enabled = TRUE)
+    FACTORLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234,
+                                     values = colnames(Factors),
+                                     selectmode = "single",
+                                     height = 12,
+                                     tip = "",
+                                     scroll = "y",
+                                     autoscroll = "x",
+                                     enabled = TRUE)
+    FACTORLIST2 <- tcltk2::tk2listbox(TRIDENT.VarSelect1234,
+                                      values = colnames(Factors),
+                                      selectmode = "single",
+                                      height = 12,
+                                      tip = "",
+                                      scroll = "y",
+                                      autoscroll = "x",
+                                      enabled = TRUE)
     OK.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "OK", command = function() {
       if (length(tcltk2::selection(XLIST)) == 0 | length(tcltk2::selection(YLIST)) == 0) {
         tcltk::tkmessageBox(message = "Please select 1 variable for each axis", icon = "warning", type = "ok")
         stop()
       }
+
       if (length(tcltk2::selection(FACTORLIST)) == 0) {
         tcltk::tkmessageBox(message = "Please select 1 factor", icon = "warning", type = "ok")
         stop()
       }
+
       if (isTRUE(tcltk2::selection(FACTORLIST) == tcltk2::selection(FACTORLIST2))) {
         tcltk::tkmessageBox(message = "1st and 2nd factor should be different", icon = "warning", type = "ok")
         stop()
       }
+
       Myx <<- colnames(Numerics)[tcltk2::selection(XLIST)]
       Myy <<- colnames(Numerics)[tcltk2::selection(YLIST)]
       Myfactor <<- colnames(Factors)[tcltk2::selection(FACTORLIST)]
-      # ...Biplot window
-      TRIDENT.PlotWin1234 <<- tcltk::tktoplevel()
-      tcltk::tkconfigure(TRIDENT.PlotWin1234, borderwidth = 10, bg = "tan")
-      tcltk::tkwm.title(TRIDENT.PlotWin1234, paste("trident", METADATA$VERSION, "- biplot"))
-      tcltk2::tk2ico.setFromFile(TRIDENT.PlotWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-      TRIDENT.PlotWin1234$PLOT <<- tcltk::tkframe(TRIDENT.PlotWin1234)
-      TRIDENT.PlotWin1234$BUTTONS <- tcltk::tkframe(TRIDENT.PlotWin1234)
-      TKPLOT <- NULL
+
+      # ...Build biplot
       Plot <- ggplot2::ggplot(data = Mydf, ggplot2::aes(x = Mydf[, Myx], y = Mydf[, Myy])) +
         ggplot2::labs(x = Myx, y = Myy) +
-        ggplot2::guides(size = FALSE) +
-        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
-                       legend.position = "right", legend.title = ggplot2::element_text(size = 12),
-                       axis.text.x = ggplot2::element_text(size = 10, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
-                       axis.text.y = ggplot2::element_text(size = 10, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+        ggplot2::guides(size = "none") +
+        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
+                       legend.position = "right", legend.title = ggplot2::element_text(size = 14),
+                       axis.text.x = ggplot2::element_text(size = 12, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                       axis.text.y = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
                        panel.background = ggplot2::element_rect(fill = "#ffffff", colour = "#000000", linetype = "solid"),
                        panel.grid.major = ggplot2::element_blank(),
                        panel.grid.minor = ggplot2::element_blank(),
                        panel.ontop = FALSE,
-                       axis.title.x = ggplot2::element_text(size = 12, angle = 00, face = "plain"),
-                       axis.title.y = ggplot2::element_text(size = 12, angle = 90, face = "plain")) +
+                       axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
+                       axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
         ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
       if (length(tcltk2::selection(FACTORLIST2)) == 0) {
         Plot <- Plot +
-          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 2) +
+          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 3) +
           ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.PCH)
@@ -699,84 +833,22 @@ trident.gui <- function() {
       if (length(tcltk2::selection(FACTORLIST2)) == 1) {
         Factor2 <- colnames(Factors)[tcltk2::selection(FACTORLIST2)]
         Plot <- Plot +
-          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 2) +
+          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 3) +
           ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_shape_manual(name = Factor2, labels = levels(Mydf[, Factor2]), values = PROJECT$OPTIONS$PLOT.PCH)
       }
 
-      TKPLOT <- tkrplot::tkrplot(TRIDENT.PlotWin1234$PLOT, fun = function() {graphics::plot(Plot)})
-      SAVE.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "SAVE", command = function() {
-        # ...a window to select saving parameters, such as resolution, size, etc.
-        TRIDENT.SaveWin1234 <-  tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("trident", METADATA$VERSION, "- Image size..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
-        HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
-        WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
-        UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
-        OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
-          PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
-            PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
-            PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
-          PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
-          tcltk::tkdestroy(TRIDENT.SaveWin1234)
-          # ......now open tkgetsavefile window
-          ggplot2::ggsave(Plot,
-                          file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
-                                                                      title = "Save plot as...",
-                                                                      initialfile = paste(Myx, "vs", Myy, "with", Myfactor, "as factor", sep = " "),
-                                                                      filetypes = paste (
-                                                                        "{{png files} {.png}}",
-                                                                        "{{eps files} {.eps}}",
-                                                                        "{{jpeg files} {.jpg .jpeg} }",
-                                                                        "{{pdf files} {.pdf}}",
-                                                                        "{{svg files} {.svg}}",
-                                                                        "{{tiff files} {.tiff}}",
-                                                                        "{{wmf files} {.wmf}}",
-                                                                        "{{All files} {*}}", sep =" "),
-                                                                      defaultextension = ".png")),
-                          dpi = PROJECT$OPTIONS$PLOT.DPI,
-                          height = PROJECT$OPTIONS$PLOT.HEIGHT,
-                          width = PROJECT$OPTIONS$PLOT.WIDTH,
-                          units = PROJECT$OPTIONS$PLOT.UNITS,
-                          limitsize = TRUE)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Cancel", tip = "", command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
-        # ......grid all in saving window
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"), HEIGHT.NTRY, tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"), WIDTH.NTRY)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"), UNITS.CBBX, columnspan = 2)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"), DPI.SPNBX, columnspan = 2)
-        tcltk::tkgrid(OK.BTN, CANCEL.BTN, columnspan = 2)
-        tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
-        tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
-      })
-      EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "Export", tip = "Export data.frame object to R", width = 10, command = function() {
-        # ......create window for name entry
-        TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
-        CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
-          My_graph_from_trident <- Plot
-          assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
-          tcltk::tkdestroy(TRIDENT.NameEntry1234)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
-        # ......grid all
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
-        tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
-      })
-      # Grid all
-      tcltk::tkpack(TRIDENT.PlotWin1234$PLOT, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkpack(TRIDENT.PlotWin1234$BUTTONS, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5, sticky = "ew")
-      tcltk::tkgrid(TKPLOT)
+      # ...Make plot window
+      make.plot.cmd(myplot = Plot)
+
       tcltk::tkdestroy(TRIDENT.VarSelect1234)
     })
-    CANCEL.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "Cancel", command = function() tcltk::tkdestroy(TRIDENT.VarSelect1234))
+
+    CANCEL.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234,
+                                    text = "Cancel",
+                                    command = function() tcltk::tkdestroy(TRIDENT.VarSelect1234))
+
     # ...grid all
     tcltk::tkgrid(tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose x-axis variable"),
                   tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose y-axis variable"),
@@ -785,6 +857,7 @@ trident.gui <- function() {
     tcltk::tkgrid(XLIST, YLIST, FACTORLIST, FACTORLIST2)
     tcltk::tkgrid(OK.BTN, CANCEL.BTN)
   }
+
   # ...boxplot.cmd----
   boxplot.cmd <- function(df) {
     # ...a window to select y and the factor
@@ -804,6 +877,7 @@ trident.gui <- function() {
     FACTORLIST2 <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
     JIGGER.CHKBTN <- tcltk2::tk2checkbutton(TRIDENT.VarSelect1234, text = "Jiggerplot")
     tcltk::tkconfigure(JIGGER.CHKBTN, variable = PROJECT$OPTIONS$JIGGER.VALUE)
+
     OK.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "OK", command = function() {
       if (length(tcltk2::selection(YLIST)) == 0) {
         tcltk::tkmessageBox(message = "Please select 1 variable", icon = "warning", type = "ok")
@@ -819,28 +893,23 @@ trident.gui <- function() {
       }
       Myy <<- colnames(Numerics)[tcltk2::selection(YLIST)]
       Myfactor <<- colnames(Factors)[tcltk2::selection(FACTORLIST)]
-      # ...Boxplot window
-      TRIDENT.PlotWin1234 <<- tcltk::tktoplevel()
-      tcltk::tkconfigure(TRIDENT.PlotWin1234, borderwidth = 10, bg = "tan")
-      tcltk::tkwm.title(TRIDENT.PlotWin1234, paste("trident", METADATA$VERSION, "- boxplot"))
-      tcltk2::tk2ico.setFromFile(TRIDENT.PlotWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-      TRIDENT.PlotWin1234$PLOT <<- tcltk::tkframe(TRIDENT.PlotWin1234)
-      TRIDENT.PlotWin1234$BUTTONS <- tcltk::tkframe(TRIDENT.PlotWin1234)
-      TKPLOT <- NULL
+
+      # ...Build boxplot
       Plot <- ggplot2::ggplot(data = Mydf, ggplot2::aes(x = Mydf[, Myfactor], y = Mydf[, Myy])) +
         ggplot2::labs(x = Myfactor, y = Myy) +
-        ggplot2::guides(size = FALSE) +
-        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
-                       legend.position = "right", legend.title = ggplot2::element_text(size = 12),
-                       axis.text.y = ggplot2::element_text(size = 10, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
-                       axis.text.x = ggplot2::element_text(size = 10, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+        ggplot2::guides(size = "none") +
+        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
+                       legend.position = "right", legend.title = ggplot2::element_text(size = 14),
+                       axis.text.y = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+                       axis.text.x = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
                        panel.background = ggplot2::element_rect(fill = "#ffffff", colour = "#000000", linetype = "solid"),
                        panel.grid.major = ggplot2::element_blank(),
                        panel.grid.minor = ggplot2::element_blank(),
                        panel.ontop = FALSE,
-                       axis.title.x = ggplot2::element_text(size = 12, angle = 00, face = "plain"),
-                       axis.title.y = ggplot2::element_text(size = 12, angle = 90, face = "plain")) +
+                       axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
+                       axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
         ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
+
       if (tcltk::tclvalue(PROJECT$OPTIONS$JIGGER.VALUE) == 0 & length(tcltk2::selection(FACTORLIST2)) == 0) {
         Plot <- Plot +
           ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
@@ -873,77 +942,15 @@ trident.gui <- function() {
           ggplot2::scale_color_manual(name = Factor2, labels = levels(Mydf[, Factor2]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_fill_manual(name = Factor2, labels = levels(Mydf[, Factor2]), values = colorspace::lighten(PROJECT$OPTIONS$PLOT.COLORS, amount = 0.5))
         }
-      tcltk::tkdestroy(TRIDENT.VarSelect1234)
-      TKPLOT <- tkrplot::tkrplot(TRIDENT.PlotWin1234$PLOT, fun = function() {graphics::plot(Plot)})
-      SAVE.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "SAVE", command = function() {
-        # ...a window to select saving parameters, such as resolution, size, etc.
-        TRIDENT.SaveWin1234 <-  tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("trident", METADATA$VERSION, "- Image size..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
-        HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
-        WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
-        UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
-        OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
-          PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
-            PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
-            PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
-          PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
-          tcltk::tkdestroy(TRIDENT.SaveWin1234)
-          ggplot2::ggsave(Plot,
-                          file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
-                                                                      title = "Save plot as...",
-                                                                      initialfile = paste(Myy, "with", Myfactor, "as factor", sep = " "),
-                                                                      filetypes = paste (
-                                                                        "{{png files} {.png}}",
-                                                                        "{{eps files} {.eps}}",
-                                                                        "{{jpeg files} {.jpg .jpeg} }",
-                                                                        "{{pdf files} {.pdf}}",
-                                                                        "{{svg files} {.svg}}",
-                                                                        "{{tiff files} {.tiff}}",
-                                                                        "{{wmf files} {.wmf}}",
-                                                                        "{{All files} {*}}", sep =" "),
-                                                                      defaultextension = ".png")),
-                          dpi = PROJECT$OPTIONS$PLOT.DPI,
-                          height = PROJECT$OPTIONS$PLOT.HEIGHT,
-                          width = PROJECT$OPTIONS$PLOT.WIDTH,
-                          units = PROJECT$OPTIONS$PLOT.UNITS,
-                          limitsize = TRUE)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Cancel", tip = "", command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
-        # ......grid all in saving window
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"), HEIGHT.NTRY, tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"), WIDTH.NTRY)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"), UNITS.CBBX, columnspan = 2)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"), DPI.SPNBX, columnspan = 2)
-        tcltk::tkgrid(OK.BTN, CANCEL.BTN, columnspan = 2)
-        tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
-        tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
-      })
-      EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "Export", tip = "Export data.frame object to R", command = function() {
-        # ......create window for name entry
-        TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
-        CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
-          My_graph_from_trident <- Plot
-          assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
-          tcltk::tkdestroy(TRIDENT.NameEntry1234)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
-        # ......grid all in entry window
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
-        tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
-      })
-      # Grid all
-      tcltk::tkpack(TRIDENT.PlotWin1234$PLOT, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkpack(TRIDENT.PlotWin1234$BUTTONS, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5, sticky = "ew")
-      tcltk::tkgrid(TKPLOT)
+
+    # ...Make plot window
+    make.plot.cmd(myplot = Plot)
+
+    tcltk::tkdestroy(TRIDENT.VarSelect1234)
     })
+
     CANCEL.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "Cancel", command = function() tcltk::tkdestroy(TRIDENT.VarSelect1234))
+
     # ...grid all
     tcltk::tkgrid(tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose y-axis variable"),
                   tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose 1st factor"),
@@ -952,6 +959,7 @@ trident.gui <- function() {
     tcltk::tkgrid(JIGGER.CHKBTN, columnspan = 2)
     tcltk::tkgrid(OK.BTN, CANCEL.BTN)
   }
+
   # ...plot.violin.cmd----
   plot.violin.cmd <- function(df) {
     # ...a window to select x and the factor
@@ -968,112 +976,44 @@ trident.gui <- function() {
     Myfactor <- NULL
     YLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Numerics), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
     FACTORLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+
     # ...OK button
     OK.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "OK", command = function() {
       Myy <<- colnames(Numerics)[tcltk2::selection(YLIST)]
       Myfactor <<- colnames(Factors)[tcltk2::selection(FACTORLIST)]
-      tcltk::tkdestroy(TRIDENT.VarSelect1234)
-      # ...Violin plot window
-      TRIDENT.PlotWin1234 <<- tcltk::tktoplevel()
-      tcltk::tkconfigure(TRIDENT.PlotWin1234, borderwidth = 10, bg = "tan")
-      tcltk::tkwm.title(TRIDENT.PlotWin1234, paste("trident", METADATA$VERSION, "- violin plot"))
-      tcltk2::tk2ico.setFromFile(TRIDENT.PlotWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-      TRIDENT.PlotWin1234$PLOT <<- tcltk::tkframe(TRIDENT.PlotWin1234)
-      TRIDENT.PlotWin1234$BUTTONS <- tcltk::tkframe(TRIDENT.PlotWin1234)
-      # ...Create plot for tcltk widget
-      TKPLOT <- NULL
+
+      # ...Build violin plot
       Plot <- ggplot2::ggplot(data = Mydf, ggplot2::aes(x = "", y = Mydf[, Myy], group = Mydf[, Myfactor])) +
         ggplot2::labs(y = Myy, x = "") +
-        ggplot2::guides(size = FALSE) +
-        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
-                       legend.position = "right", legend.title = ggplot2::element_text(size = 12),
-                       axis.text.x = ggplot2::element_text(size = 10, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
-                       axis.text.y = ggplot2::element_text(size = 10, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+        ggplot2::guides(size = "none") +
+        ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
+                       legend.position = "right", legend.title = ggplot2::element_text(size = 14),
+                       axis.text.x = ggplot2::element_text(size = 12, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                       axis.text.y = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
                        panel.background = ggplot2::element_rect(fill = "#ffffff", colour = "#000000", linetype = "solid"),
                        panel.grid.major = ggplot2::element_blank(),
                        panel.grid.minor = ggplot2::element_blank(),
                        panel.ontop = FALSE,
-                       axis.title.x = ggplot2::element_text(size = 12, angle = 00, face = "plain"),
-                       axis.title.y = ggplot2::element_text(size = 12, angle = 90, face = "plain")) +
+                       axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
+                       axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
         ggplot2::geom_violin(ggplot2::aes(fill = Mydf[, Myfactor]), scale = "area", size = 0.5) +
         ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
         ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
 
-      TKPLOT <- tkrplot::tkrplot(TRIDENT.PlotWin1234$PLOT, fun = function() {graphics::plot(Plot)})
-      SAVE.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "SAVE", command = function() {
-        # ...a window to select saving parameters, such as resolution, size, etc.
-        TRIDENT.SaveWin1234 <-  tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("trident", METADATA$VERSION, "- Image size..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
-        HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
-        WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
-        UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
-        OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
-          PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
-            PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
-          if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
-            PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
-          PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
-          tcltk::tkdestroy(TRIDENT.SaveWin1234)
-          # ......now open tkgetsavefile window
-          ggplot2::ggsave(Plot,
-                          file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
-                                                                      title = "Save plot as...",
-                                                                      initialfile = paste(Myy, "with", Myfactor, "as factor", sep = " "),
-                                                                      filetypes = paste (
-                                                                        "{{png files} {.png}}",
-                                                                        "{{eps files} {.eps}}",
-                                                                        "{{jpeg files} {.jpg .jpeg} }",
-                                                                        "{{pdf files} {.pdf}}",
-                                                                        "{{svg files} {.svg}}",
-                                                                        "{{tiff files} {.tiff}}",
-                                                                        "{{wmf files} {.wmf}}",
-                                                                        "{{All files} {*}}", sep =" "),
-                                                                      defaultextension = ".png")),
-                          dpi = PROJECT$OPTIONS$PLOT.DPI,
-                          height = PROJECT$OPTIONS$PLOT.HEIGHT,
-                          width = PROJECT$OPTIONS$PLOT.WIDTH,
-                          units = PROJECT$OPTIONS$PLOT.UNITS,
-                          limitsize = TRUE)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Cancel", tip = "", command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
-        # ......grid all in saving window
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"), HEIGHT.NTRY, tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"), WIDTH.NTRY)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"), UNITS.CBBX, columnspan = 2)
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"), DPI.SPNBX, columnspan = 2)
-        tcltk::tkgrid(OK.BTN, CANCEL.BTN, columnspan = 2)
-        tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
-        tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
-      })
-      EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PlotWin1234$BUTTONS, text = "Export", tip = "Export data.frame object to R", command = function() {
-        TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
-        tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
-        CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
-          My_graph_from_trident <- Plot
-          assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
-          tcltk::tkdestroy(TRIDENT.NameEntry1234)
-        })
-        CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
-        # ......grid all
-        tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
-        tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
-      })
-      # Grid all
-      tcltk::tkpack(TRIDENT.PlotWin1234$PLOT, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkpack(TRIDENT.PlotWin1234$BUTTONS, side = "top", fill = "both" , expand = TRUE)
-      tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5, sticky = "ew")
-      tcltk::tkgrid(TKPLOT)
+      # ...Make plot window
+      make.plot.cmd(myplot = Plot)
+
+      tcltk::tkdestroy(TRIDENT.VarSelect1234)
     })
+
     CANCEL.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "Cancel", command = function() tcltk::tkdestroy(TRIDENT.VarSelect1234))
+
     # ...grid all
     tcltk::tkgrid(tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose y-axis variable"), tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose factor"))
     tcltk::tkgrid(YLIST, FACTORLIST)
     tcltk::tkgrid(OK.BTN, CANCEL.BTN)
   }
+
   # ...plot.pca.cmd----
   plot.pca.cmd <- function(df) {
     # ...a first window to select variables for the PCA
@@ -1087,133 +1027,105 @@ trident.gui <- function() {
     Factors  <- dplyr::select_if(Mydf, is.factor)
     Mydf <- data.frame(Factors, Numerics)
     Myvars <- NULL
+    Mysupvars <- NULL
     Myfactor <- NULL
     VARLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Numerics), selectmode = "extended", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    #####
+    SUPVARLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Numerics), selectmode = "extended", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+    #####
     FACTORLIST <- tcltk2::tk2listbox(TRIDENT.VarSelect1234, values = colnames(Factors), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+
     OK.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "OK", command = function() {
       Myvars <<- colnames(Numerics)[tcltk2::selection(VARLIST)]
+      Mysupvars <<- colnames(Numerics)[tcltk2::selection(SUPVARLIST)]
       Myfactor <<- colnames(Factors)[tcltk2::selection(FACTORLIST)]
       tcltk::tkdestroy(TRIDENT.VarSelect1234)
-      Mypca <- stats::prcomp(Mydf[, which(colnames(Mydf) %in% Myvars)], center = TRUE, scale. = TRUE)
-      Mypca.df <- data.frame(Mypca$x)
-      Mycor.df <- data.frame(Mypca$rotation)
-      Contrib <- 100 * Mypca$sdev^2 / sum(Mypca$sdev^2)
+      Mypcadata <- data.frame(Mydf[, c(which(colnames(Mydf) %in% Myvars), which(colnames(Mydf) %in% Mysupvars))])
+      Mypca <- FactoMineR::PCA(Mypcadata, quanti.sup = c((length(Myvars) + 1):(length(Myvars) + length(Mysupvars))), ncp = ncol(length(Myvars)))
+      Mypca.df <- data.frame(Mypca$ind$coord)
+      Mycor.df <- data.frame(Mypca$var$coord)
+      Contrib <- data.frame(Mypca$eig)[, 2]
+
       # ...a second window to select which PC to plot
       TRIDENT.PCSelect5678 <<- tcltk::tktoplevel()
       tcltk::tkwm.title(TRIDENT.PCSelect5678, paste("trident", METADATA$VERSION, "- Screeplot..."))
       tcltk2::tk2ico.setFromFile(TRIDENT.PCSelect5678, system.file("extdata","pics","trident.ico", package = "trident"))
       TKPLOT <- NULL
-      SCREEPLOT <- factoextra::fviz_eig(Mypca, addlabels = TRUE, ylim = c(0, 50), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
+      SCREEPLOT <- factoextra::fviz_eig(Mypca, addlabels = TRUE, ylim = c(0, max(Mypca$eig[, 2])), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
       TKPLOT <- tkrplot::tkrplot(TRIDENT.PCSelect5678, fun = function() graphics::plot(SCREEPLOT))
       MYPCLIST1 <- tcltk2::tk2listbox(TRIDENT.PCSelect5678, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
       MYPCLIST2 <- tcltk2::tk2listbox(TRIDENT.PCSelect5678, values = colnames(Mypca.df), selectmode = "single", height = 12, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-      PLOT.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678, text = "Plot", tip = "Plot the selected PCs against each other", command = function() {
-        # ...1st step: PCA PLOT
-        # ...a first window for the PCA plot
-        TRIDENT.PCAPlot5678 <<- tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.PCAPlot5678, paste("trident", METADATA$VERSION, "- PCA (biplot)"))
-        tcltk2::tk2ico.setFromFile(TRIDENT.PCAPlot5678, system.file("extdata","pics","trident.ico", package = "trident"))
-        tcltk::tkconfigure(TRIDENT.PCAPlot5678, borderwidth = 10, bg = "tan")
 
-        TRIDENT.PCAPlot5678$PLOT <<- tcltk::tkframe(TRIDENT.PCAPlot5678)
-        TRIDENT.PCAPlot5678$BUTTONS <- tcltk::tkframe(TRIDENT.PCAPlot5678)
-        TKPLOT <- NULL
+
+      PLOT.SUP.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678, text = "Add individuals", tip = "Add supplementary individuals to the PCA", command = function() {
+
+        File.tmp <- tcltk::tk_choose.files(filters = matrix(c("All files", "Text", "Calc", "Excel", "*", ".txt", ".csv", ".xls"), ncol = 2))
+
+        if (tools::file_ext(File.tmp) == "txt") {
+          Mytable <- data.frame(utils::read.table(file = File.tmp, header = TRUE, sep = "", dec = ".", row.names = NULL, as.is = FALSE), stringsAsFactors = TRUE)
+        }
+
+        if (tools::file_ext(File.tmp) == "csv") {
+          Mytable <- data.frame(utils::read.table(file = File.tmp, header = TRUE, sep = ",", dec = ".", row.names = NULL, as.is = FALSE), stringsAsFactors = TRUE)
+        }
+
+        if (tools::file_ext(File.tmp) == "xls") {
+          Mytable <- data.frame(utils::read.table(file = File.tmp, header = TRUE, sep = "\t", dec = ".", row.names = NULL, as.is = FALSE), stringsAsFactors = TRUE)
+        }
+
+
+
+
+        Splitted <- data.frame(Mytable[, c(which(colnames(Mytable) %in% Myvars), which(colnames(Mytable) %in% Mysupvars))])
+        if (length(Splitted[1, ]) != length (Mydf[1, ])) {
+          tcltk::tkmessageBox(type = "ok",
+                              message = "Different number of columns,\nplease check column names")
+          stop()
+        }
+
+
+
+
+
+        Mynewpcadata <- dplyr::union(Mypcadata, Splitted)
+
+        Mypca <- FactoMineR::PCA(Mynewpcadata,
+                                 ind.sup = c((length(Mydf[, 1]) + 1):(length(Mydf[, 1]) + length(Mytable[, 1]))),
+                                 quanti.sup = c((length(Myvars) + 1):(length(Myvars) + length(Mysupvars))),
+                                 ncp = ncol(length(Myvars)))
+
+
         Plot <- ggplot2::ggplot(data = Mypca.df, ggplot2::aes(x = Mypca.df[, tcltk2::selection(MYPCLIST1)], y = Mypca.df[, tcltk2::selection(MYPCLIST2)], group = Mydf[, which(colnames(Mydf) %in% Myfactor)])) +
           ggplot2::labs(x = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], " (", round(Contrib[tcltk2::selection(MYPCLIST1)], 1), " %)", sep = ""),
                         y = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], " (", round(Contrib[tcltk2::selection(MYPCLIST2)], 1), " %)", sep = "")) +
-          ggplot2::guides(size = FALSE) +
-          ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 10, face = "bold"),
-                         legend.position = "bottom", legend.title = ggplot2::element_text(size = 12),
-                         axis.text.x = ggplot2::element_text(size = 10, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
-                         axis.text.y = ggplot2::element_text(size = 10, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+          ggplot2::guides(size = "none") +
+          ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
+                         legend.position = "bottom", legend.title = ggplot2::element_text(size = 14),
+                         axis.text.x = ggplot2::element_text(size = 12, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                         axis.text.y = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
                          panel.background = ggplot2::element_rect(fill = "#ffffff", colour = "#000000", linetype = "solid"),
                          panel.grid.major = ggplot2::element_blank(),
                          panel.grid.minor = ggplot2::element_blank(),
                          panel.ontop = FALSE,
-                         axis.title.x = ggplot2::element_text(size = 12, angle = 00, face = "plain"),
-                         axis.title.y = ggplot2::element_text(size = 12, angle = 90, face = "plain")) +
-          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 2) +
+                         axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
+                         axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
+          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 3) +
           ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
           ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.PCH) +
           ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
-        TKPLOT <- tkrplot::tkrplot(TRIDENT.PCAPlot5678$PLOT, hscale = 1.5, vscale = 1.5, fun = function() {graphics::plot(Plot)})
-        SAVE.BTN <- tcltk2::tk2button(TRIDENT.PCAPlot5678$BUTTONS, text = "SAVE", command = function() {
-          # ...a second window to select saving parameters, such as resolution, size, etc.
-          TRIDENT.SaveWin1234 <-  tcltk::tktoplevel()
-          tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("trident", METADATA$VERSION, "- Image size..."))
-          tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-          DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
-          HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
-          WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
-          UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
-          OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
-            PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
-            if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
-              PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
-            if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
-              PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
-            PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
-            tcltk::tkdestroy(TRIDENT.SaveWin1234)
-            ggplot2::ggsave(Plot,
-                            file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
-                                                                        title = "Save plot as...",
-                                                                        initialfile = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], "vs", colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], sep = " "),
-                                                                        filetypes = paste (
-                                                                          "{{png files} {.png}}",
-                                                                          "{{eps files} {.eps}}",
-                                                                          "{{jpeg files} {.jpg .jpeg} }",
-                                                                          "{{pdf files} {.pdf}}",
-                                                                          "{{svg files} {.svg}}",
-                                                                          "{{tiff files} {.tiff}}",
-                                                                          "{{wmf files} {.wmf}}",
-                                                                          "{{All files} {*}}", sep =" "),
-                                                                        defaultextension = ".png")),
-                            dpi = PROJECT$OPTIONS$PLOT.DPI,
-                            height = PROJECT$OPTIONS$PLOT.HEIGHT,
-                            width = PROJECT$OPTIONS$PLOT.WIDTH,
-                            units = PROJECT$OPTIONS$PLOT.UNITS,
-                            limitsize = TRUE)
-          })
-          CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Cancel", tip = "", command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
-          # ...grid all
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"), HEIGHT.NTRY, tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"), WIDTH.NTRY)
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"), UNITS.CBBX, columnspan = 2)
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"), DPI.SPNBX, columnspan = 2)
-          tcltk::tkgrid(OK.BTN, CANCEL.BTN, columnspan = 2)
-          tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
-          tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
-        })
-        EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PCAPlot5678$BUTTONS, text = "Export", tip = "Export data.frame object to R", command = function() {
-          # ...a second window for PCA plot name entry
-          TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
-          tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
-          tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
-          NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
-          CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
-            My_graph_from_trident <- Plot
-            assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
-            tcltk::tkdestroy(TRIDENT.NameEntry1234)
-          })
-          CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
-          # ...grid all
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
-          tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
-        })
-        # ...Grid all in the first PCA plot window
-        tcltk::tkpack(TRIDENT.PCAPlot5678$PLOT, side = "top", fill = "both" , expand = TRUE)
-        tcltk::tkpack(TRIDENT.PCAPlot5678$BUTTONS, side = "top", fill = "both" , expand = TRUE)
-        tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, padx = 5, pady = 5)
-        tcltk::tkgrid(TKPLOT)
-        # ...2nd step: PCA COR CIRCLE
-        # ...a first window for the correlation circle plot
-        TRIDENT.CorCircle1234 <<- tcltk::tktoplevel()
-        tcltk::tkwm.title(TRIDENT.CorCircle1234, paste("trident", METADATA$VERSION, "- PCA (correlation circle)"))
-        tcltk2::tk2ico.setFromFile(TRIDENT.CorCircle1234, system.file("extdata","pics","trident.ico", package = "trident"))
-        tcltk::tkconfigure(TRIDENT.CorCircle1234, borderwidth = 10, bg = "tan")
-        TRIDENT.CorCircle1234$PLOT <<- tcltk::tkframe(TRIDENT.CorCircle1234)
-        TRIDENT.CorCircle1234$BUTTONS <- tcltk::tkframe(TRIDENT.CorCircle1234)
-        TKPLOT2 <- NULL
+
+        make.plot.cmd(myplot = Plot)
+
+      })
+
+
+
+      PLOT.COR.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678,
+                                        text = "Correlation\ncircle",
+                                        tip = "Plot the correlation circle, with supplementary variables",
+                                        command = function() {
+        # ...Build correlation circle plot
         Plot2 <- factoextra::fviz_pca_var(Mypca, axes = c(tcltk2::selection(MYPCLIST1), tcltk2::selection(MYPCLIST2)), repel = TRUE, col.var="steelblue") +
           ggplot2::labs(x = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], " (", round(Contrib[tcltk2::selection(MYPCLIST1)], 1), " %)", sep = ""),
                         y = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], " (", round(Contrib[tcltk2::selection(MYPCLIST2)], 1), " %)", sep = "")) +
@@ -1228,79 +1140,96 @@ trident.gui <- function() {
                          axis.title.x = ggplot2::element_text(size = 12, angle = 00, face = "plain"),
                          axis.title.y = ggplot2::element_text(size = 12, angle = 90, face = "plain")) +
           ggplot2::labs(title = NULL)
-        TKPLOT2 <- tkrplot::tkrplot(TRIDENT.CorCircle1234$PLOT, hscale = 1.5, vscale = 1.5, fun = function() {graphics::plot(Plot2)})
-        SAVE2.BTN <- tcltk2::tk2button(TRIDENT.CorCircle1234$BUTTONS, text = "SAVE", command = function() {
-          # ...a second window to select saving parameters, such as resolution, size, etc.
-          TRIDENT.SaveWin1234 <-  tcltk::tktoplevel()
-          tcltk::tkwm.title(TRIDENT.SaveWin1234, paste("Image size..."))
-          tcltk2::tk2ico.setFromFile(TRIDENT.SaveWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
-          DPI.SPNBX <- tcltk2::tk2spinbox(TRIDENT.SaveWin1234, from = 100, to = 1000, increment = 10)
-          HEIGHT.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.HEIGHT)))
-          WIDTH.NTRY <- tcltk2::tk2entry(TRIDENT.SaveWin1234, textvariable = tcltk::tclVar(paste(PROJECT$OPTIONS$PLOT.WIDTH)))
-          UNITS.CBBX <- tcltk2::tk2combobox(TRIDENT.SaveWin1234, values = c("mm", "cm", "in"))
-          OK.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Ok", tip = "", command = function() {
-            PROJECT$OPTIONS$PLOT.DPI <<- as.numeric(tcltk::tclvalue(tcltk::tkget(DPI.SPNBX)))
-            if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))) == FALSE) {
-              PROJECT$OPTIONS$PLOT.HEIGHT <<- as.numeric(tcltk::tclvalue(tcltk::tkget(HEIGHT.NTRY)))}
-            if (is.na(as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))) == FALSE){
-              PROJECT$OPTIONS$PLOT.WIDTH <<- as.numeric(tcltk::tclvalue(tcltk::tkget(WIDTH.NTRY)))}
-            PROJECT$OPTIONS$PLOT.UNITS <<- tcltk::tclvalue(tcltk::tkget(UNITS.CBBX))
-            tcltk::tkdestroy(TRIDENT.SaveWin1234)
-            ggplot2::ggsave(Plot2,
-                            file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.mainwin1234,
-                                                                        title = "Save plot as...",
-                                                                        initialfile = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], "vs", colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], sep = " "),
-                                                                        filetypes = paste (
-                                                                          "{{png files} {.png}}",
-                                                                          "{{eps files} {.eps}}",
-                                                                          "{{jpeg files} {.jpg .jpeg} }",
-                                                                          "{{pdf files} {.pdf}}",
-                                                                          "{{svg files} {.svg}}",
-                                                                          "{{tiff files} {.tiff}}",
-                                                                          "{{wmf files} {.wmf}}",
-                                                                          "{{All files} {*}}", sep =" "),
-                                                                        defaultextension = ".png")),
-                            dpi = PROJECT$OPTIONS$PLOT.DPI,
-                            height = PROJECT$OPTIONS$PLOT.HEIGHT,
-                            width = PROJECT$OPTIONS$PLOT.WIDTH,
-                            units = PROJECT$OPTIONS$PLOT.UNITS,
-                            limitsize = TRUE)
-          })
-          CANCEL.BTN <- tcltk2::tk2button(TRIDENT.SaveWin1234, text = "Cancel", tip = "", command = function() tcltk::tkdestroy(TRIDENT.SaveWin1234))
-          # ...grid all
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Height:"), HEIGHT.NTRY, tcltk::tklabel(TRIDENT.SaveWin1234, text = "Width:"), WIDTH.NTRY)
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Units:"), UNITS.CBBX, columnspan = 2)
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.SaveWin1234, text = "Resolution (dpi):"), DPI.SPNBX, columnspan = 2)
-          tcltk::tkgrid(OK.BTN, CANCEL.BTN, columnspan = 2)
-          tcltk::tkset(DPI.SPNBX, PROJECT$OPTIONS$PLOT.DPI)
-          tcltk::tkset(UNITS.CBBX, PROJECT$OPTIONS$PLOT.UNITS)
-        })
-        EXPORT2.BTN <- tcltk2::tk2button(TRIDENT.CorCircle1234$BUTTONS, text = "Export", tip = "Export data.frame object to R", command = function() {
-          # ...a second window for PCA plot name entry
-          TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
-          tcltk::tkwm.title(TRIDENT.NameEntry1234, paste("trident", METADATA$VERSION, "- Enter name..."))
-          tcltk2::tk2ico.setFromFile(TRIDENT.NameEntry1234, system.file("extdata","pics","trident.ico", package = "trident"))
-          NAME.ENTRY <- tcltk2::tk2entry(TRIDENT.NameEntry1234, tip = "Enter the object's name in R", textvariable = PROJECT$NAMES$EXPORT)
-          CONFIRM.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Confirm", tip = "Confirm name and export to R", command = function() {
-            My_graph_from_trident <- Plot
-            assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_graph_from_trident, envir = .GlobalEnv)
-            tcltk::tkdestroy(TRIDENT.NameEntry1234)
-          })
-          CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
-          # ...grid all
-          tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
-          tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
-        })
-        # ...Grid all in the first PCA plot window
-        tcltk::tkpack(TRIDENT.CorCircle1234$PLOT, side = "top", fill = "both" , expand = TRUE)
-        tcltk::tkpack(TRIDENT.CorCircle1234$BUTTONS, side = "top", fill = "both" , expand = TRUE)
-        tcltk::tkgrid(SAVE2.BTN, EXPORT2.BTN, padx = 5, pady = 5, sticky = "ew")
-        tcltk::tkgrid(TKPLOT2)
+
+        # ...Make plot window
+        make.plot.cmd(myplot = Plot2)
       })
+
+
+      PLOT.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678,
+                                    text = "Plot",
+                                    tip = "Plot the selected PCs against each other",
+                                    command = function() {
+
+        # ...Build plot
+        Plot <- ggplot2::ggplot(data = Mypca.df, ggplot2::aes(x = Mypca.df[, tcltk2::selection(MYPCLIST1)], y = Mypca.df[, tcltk2::selection(MYPCLIST2)], group = Mydf[, which(colnames(Mydf) %in% Myfactor)])) +
+          ggplot2::labs(x = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST1)], " (", round(Contrib[tcltk2::selection(MYPCLIST1)], 1), " %)", sep = ""),
+                        y = paste(colnames(Mypca.df)[tcltk2::selection(MYPCLIST2)], " (", round(Contrib[tcltk2::selection(MYPCLIST2)], 1), " %)", sep = "")) +
+          ggplot2::guides(size = "none") +
+          ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
+                         legend.position = "bottom", legend.title = ggplot2::element_text(size = 14),
+                         axis.text.x = ggplot2::element_text(size = 12, angle = 00, hjust = 0.5, vjust = 0.5, face = "plain"),
+                         axis.text.y = ggplot2::element_text(size = 12, angle = 90, hjust = 0.5, vjust = 0.5, face = "plain"),
+                         panel.background = ggplot2::element_rect(fill = "#ffffff", colour = "#000000", linetype = "solid"),
+                         panel.grid.major = ggplot2::element_blank(),
+                         panel.grid.minor = ggplot2::element_blank(),
+                         panel.ontop = FALSE,
+                         axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
+                         axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
+          ggplot2::geom_point(ggplot2::aes(shape = Mydf[, Myfactor], color = Mydf[, Myfactor], fill = Mydf[, Myfactor]), size = 3) +
+          ggplot2::scale_color_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
+          ggplot2::scale_fill_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.COLORS) +
+          ggplot2::scale_shape_manual(name = Myfactor, labels = levels(Mydf[, Myfactor]), values = PROJECT$OPTIONS$PLOT.PCH) +
+          ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2)))
+
+        # ...Make plot window
+        make.plot.cmd(myplot = Plot2)
+      })
+
       SAVE.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678, text = "Save", tip = "Save PCs data", command = function() {
-        utils::write.table(Mypca.df, append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE,
-                           file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.PCSelect5678, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
-      })
+        #utils::write.table(Mypca.df, append = FALSE, quote = FALSE, sep = " ", eol = "\n", na = "NA", dec = ".", row.names = FALSE, col.names = TRUE,
+        #                   file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.PCSelect5678, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
+
+        sink(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = TRIDENT.PCSelect5678, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
+        cat("Eigenvalues\n")
+        print(factoextra::get_eigenvalue(Mypca), quote = FALSE)
+        cat("\n")
+        cat("\n--------------------------------------------------\n")
+        cat("\nIndividuals\n")
+        cat("Coordinates for the individuals\n")
+        print(factoextra::get_pca_ind(Mypca)$coord, quote = FALSE)
+        cat("Cos2 for the individuals\n")
+        print(factoextra::get_pca_ind(Mypca)$cos2, quote = FALSE)
+        cat("\n")
+        cat("Contributions of the individuals\n")
+        print(factoextra::get_pca_ind(Mypca)$contrib, quote = FALSE)
+        cat("\n")
+        cat("\n--------------------------------------------------\n")
+        cat("\nVariables\n")
+        cat("Coordinates for the variables\n")
+        print(factoextra::get_pca_var(Mypca)$coord, quote = FALSE)
+        cat("\n")
+        cat("Correlation between variables and dimensions\n")
+        print(factoextra::get_pca_var(Mypca)$cor, quote = FALSE)
+        cat("\n")
+        cat("Cos2 for the variables\n")
+        print(factoextra::get_pca_var(Mypca)$cos2, quote = FALSE)
+        cat("\n")
+        cat("Contributions of the variables\n")
+        print(factoextra::get_pca_var(Mypca)$contrib, quote = FALSE)
+        cat("\n")
+        cat("\n--------------------------------------------------\n")
+        cat("\nSupplementary variables\n")
+        cat("Coordinates for the variables\n")
+        print(Mypca$quanti.sup$coord, quote = FALSE)
+        cat("Correlation between the variables and the dimensions\n")
+        cat("\n")
+        print(Mypca$quanti.sup$cor, quote = FALSE)
+        cat("\n")
+        cat("Cos2 for the variables\n")
+        print(Mypca$quanti.sup$cos2, quote = FALSE)
+        cat("\n")
+        cat("\n--------------------------------------------------\n")
+        cat("\nSupplementary individuals\n")
+        cat("Coordinates for the individuals\n")
+        print(Mypca$ind.sup$coord, quote = FALSE)
+        cat("\n")
+        cat("Cos2 for the individuals\n")
+        print(Mypca$ind.sup$cos2, quote = FALSE)
+
+        sink()
+        })
+
       EXPORT.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678, text = "Export", tip = "Export PCA files in R", command = function() {
         # ......create window for PCA data name entry
         TRIDENT.NameEntry1234 <- tcltk::tktoplevel()
@@ -1312,23 +1241,42 @@ trident.gui <- function() {
           assign(paste(tcltk::tclvalue(tcltk::tkget(NAME.ENTRY))), My_data_from_trident, envir = .GlobalEnv)
           tcltk::tkdestroy(TRIDENT.NameEntry1234)
         })
+
         CANCEL.BTN <- tcltk2::tk2button(TRIDENT.NameEntry1234, text = "Cancel", tip = "Cancel exportation", command = function() tcltk::tkdestroy(TRIDENT.NameEntry1234))
+
         # ......grid all
         tcltk::tkgrid(tcltk::tklabel(TRIDENT.NameEntry1234, text = "Name:"), NAME.ENTRY)
         tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
       })
+
       DONE.BTN <- tcltk2::tk2button(TRIDENT.PCSelect5678, text = "Done!", tip = "Clicking this will close this window", command = function() tcltk::tkdestroy(TRIDENT.PCSelect5678))
+
       # Grid all
       tcltk::tkgrid(TKPLOT, columnspan = 2)
-      tcltk::tkgrid(tcltk::tklabel(TRIDENT.PCSelect5678, text = "Select PCs:"), columnspan = 2)
+      tcltk::tkgrid(tcltk::tklabel(TRIDENT.PCSelect5678, text = "Select PCs:"),
+                    columnspan = 2)
       tcltk::tkgrid(MYPCLIST1, MYPCLIST2)
-      tcltk::tkgrid(PLOT.BTN, DONE.BTN)
-      tcltk::tkgrid(SAVE.BTN, EXPORT.BTN, sticky = "ew")
+      tcltk::tkgrid(PLOT.BTN,
+                    DONE.BTN,
+                    sticky = "ew",
+                    pady = 5)
+      tcltk::tkgrid(PLOT.SUP.BTN,
+                    PLOT.COR.BTN,
+                    sticky = "nsew",
+                    pady = 10)
+      tcltk::tkgrid(SAVE.BTN,
+                    EXPORT.BTN,
+                    sticky = "ew",
+                    pady = 5)
     })
+
     CANCEL.BTN <- tcltk2::tk2button(TRIDENT.VarSelect1234, text = "Cancel", command = function() tcltk::tkdestroy(TRIDENT.VarSelect1234))
+
     # ...grid all
-    tcltk::tkgrid(tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose variables"), tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose factor"))
-    tcltk::tkgrid(VARLIST, FACTORLIST)
+    tcltk::tkgrid(tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose variables"),
+                  tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose supplementary\nvariables (optional)"),
+                  tcltk::tklabel(TRIDENT.VarSelect1234, text = "Choose factor"))
+    tcltk::tkgrid(VARLIST, SUPVARLIST, FACTORLIST)
     tcltk::tkgrid(OK.BTN, CANCEL.BTN)
   }
 
@@ -2046,6 +1994,70 @@ trident.gui <- function() {
     tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "Total number of cells"), SIZEN.SPINBOX, padx = 50, pady = 20, sticky = "e")
     tcltk::tkgrid(OK.BTN2, CANCEL.BTN2, padx = 50, pady = 20, sticky = "ew")
   })
+
+
+  # ......Topology----
+  tcltk::tkadd(HETERO.MENU, "command", label = "Topology parameters", command = function() {
+    TRIDENT.size1234 <- tcltk::tktoplevel()
+    SIZEX.SPINBOX <- tcltk2::tk2spinbox(TRIDENT.size1234, textvariable = DMTA$SIZE$X, width = 20, from = 100, to = 256, increment = 1, tip = "")
+    SIZEY.SPINBOX <- tcltk2::tk2spinbox(TRIDENT.size1234, textvariable = DMTA$SIZE$Y, width = 20, from = 100, to = 256, increment = 1, tip = "")
+    SIZEN.SPINBOX <- tcltk2::tk2spinbox(TRIDENT.size1234, textvariable = DMTA$SIZE$N, width = 20, from = 100, to = 256, increment = 1, tip = "")
+    OK.BTN2 <- tcltk2::tk2button(TRIDENT.size1234, text = "Ok", tip = "", command = function () {
+      Size.x <- as.numeric(tcltk::tclvalue(tcltk::tkget(SIZEX.SPINBOX)))
+      Size.y <- as.numeric(tcltk::tclvalue(tcltk::tkget(SIZEY.SPINBOX)))
+      Size.n <- as.numeric(tcltk::tclvalue(tcltk::tkget(SIZEN.SPINBOX)))
+      tcltk::tkdestroy(TRIDENT.size1234)
+
+      # ...disable
+      tcltk::tkconfigure(EXPORT.BTN, state = "disable")
+      tcltk::tkconfigure(CLEAN.MBTN, state = "disable")
+      tcltk::tkconfigure(COMPUTE.MBTN, state = "disable")
+      tcltk::tkconfigure(HETERO.MBTN, state = "disable")
+      tcltk::tkconfigure(HISTO.BTN, state = "disable")
+      tcltk::tkconfigure(BATCH.BTN, state = "disable")
+      # Pop a waiting message
+      TRIDENT.busy <- tcltk::tktoplevel()
+      tcltk::tkgrid(tcltk2::tk2label(TRIDENT.busy, text = "Please wait a moment\nProcessing surface..."), padx = 50, pady = 20, sticky = "ew")
+      tcltk::tcl("wm", "attributes", TRIDENT.busy, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", TRIDENT.busy, topmost = FALSE)
+      tcltk2::tk2ico.setFromFile(TRIDENT.busy, system.file("extdata","pics","trident.ico", package = "trident"))
+      tcltk::tkwm.title(TRIDENT.busy, paste(""))
+      # ...Computation
+      TOPO <- trident::dmta.spatial(sur = DMTA$SURF, type = "multi", size.x = Size.x, size.y = Size.y, size.n = Size.n)
+      DMTA$COMPUT.HTR$SPAT <<- data.frame(Spat[3:9])
+      Mytable <- data.frame(File = Spat[1], c(plyr::colwise(trident::trident.hetero)(data.frame(DMTA$COMPUT.HTR$SPAT))), stringsAsFactors = TRUE)
+      Myvartable <- data.frame(Variables = colnames(Mytable), Type = c("integer", rep(paste(unlist(Spat[2])), 7*15)))
+      if (!is.null(DMTA$DATASET)) DMTA$DATASET <<- merge(DMTA$DATASET, Mytable, by = intersect(names(DMTA$DATASET), names(Mytable)), all = TRUE, sort = FALSE, no.dups = TRUE)
+      if (is.null(DMTA$DATASET)) DMTA$DATASET <<- Mytable
+      if (!is.null(DMTA$VARIABLES))  DMTA$VARIABLES <<- dplyr::union(DMTA$VARIABLES, Myvartable)
+      if (is.null(DMTA$VARIABLES)) DMTA$VARIABLES <<- Myvartable
+      # destroy the waiting message
+      tcltk::tkdestroy(TRIDENT.busy)
+      # ...A window to display the results
+      TRIDENT.TableWin1234 <<- tcltk::tktoplevel()
+      tcltk2::tk2ico.setFromFile(TRIDENT.TableWin1234, system.file("extdata","pics","trident.ico", package = "trident"))
+      tcltk::tkwm.title(TRIDENT.TableWin1234, paste("trident", METADATA$VERSION, "- DMTA"))
+      build.table.cmd(DMTA$DATASET, TRIDENT.TableWin1234, bg.table = "honeydew2", bg.title = "darkseagreen", height = 1)
+      add.to.dataset.cmd(widget = TRIDENT.TableWin1234, data = DMTA$DATASET, variable = DMTA$VARIABLES)
+      tcltk::tcl("wm", "attributes", TRIDENT.TableWin1234, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", TRIDENT.TableWin1234, topmost = FALSE)
+      # ...re-able
+      tcltk::tkconfigure(EXPORT.BTN, state = "normal")
+      tcltk::tkconfigure(CLEAN.MBTN, state = "normal")
+      tcltk::tkconfigure(COMPUTE.MBTN, state = "normal")
+      tcltk::tkconfigure(HETERO.MBTN, state = "normal")
+      tcltk::tkconfigure(BATCH.BTN, state = "normal")
+      if (!is.null(DMTA$COMPUT.HTR)) tcltk::tkconfigure(HISTO.BTN, state = "normal")
+    })
+    CANCEL.BTN2 <- tcltk2::tk2button(TRIDENT.size1234, text = "Cancel", tip = "", command = function () tcltk::tkdestroy(TRIDENT.size1234))
+    tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "Change the dimension of the surface?"), columnspan = 2, padx = 50, pady = 20, sticky = "ew")
+    tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "X-axis (px)"), SIZEX.SPINBOX, padx = 50, pady = 20, sticky = "e")
+    tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "Y-axis (px)"), SIZEY.SPINBOX, padx = 50, pady = 20, sticky = "e")
+    tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "Change the number of grid cells for heterogeneity?\n(please choose a square number)"), columnspan = 2, padx = 50, pady = 20, sticky = "ew")
+    tcltk::tkgrid(tcltk2::tk2label(TRIDENT.size1234, text = "Total number of cells"), SIZEN.SPINBOX, padx = 50, pady = 20, sticky = "e")
+    tcltk::tkgrid(OK.BTN2, CANCEL.BTN2, padx = 50, pady = 20, sticky = "ew")
+  })
+
 
   # ......Compute all----
   tcltk::tkadd(HETERO.MENU, "separator")
