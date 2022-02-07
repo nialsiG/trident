@@ -1,11 +1,9 @@
 # sur.read----
 #' @title sur.read
-#' @description Description
+#' @description Read .SUR files
 #' @param sur surface file
 #' @param type character vector indicating the desired output format - either a matrix of heights, or a data.frame with x, y and z as columns
-#' @return the result of fun
-#' @examples
-#' #to do
+#' @return A data frame or a matrix of the 3d coordinates of the surface
 #' @export
 sur.read <- function(sur, type = "xyz") {
   fileID <- file(sur, 'rb')

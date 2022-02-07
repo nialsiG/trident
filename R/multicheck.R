@@ -1,12 +1,10 @@
 # multicheck----
-#' @title multicheck2
+#' @title multicheck
 #' @description Perform various statistical checks
 #' @param df A dataframe or a subset of a dataset entirely composed of numeric variables
 #' @param y A factor
 #' @param alpha Significance level
 #' @return A list of ratios and p-values for all the options which where selected using check.- parameters
-#' @examples
-#' #to do
 #' @export
 multicheck <- function(df, y, alpha = 0.05) {
   # BEFORE, check data structure

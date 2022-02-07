@@ -8,10 +8,8 @@
 #' @param alpha Level of significance
 #' @param byngr Logical, should data be classified by the largest number of significantly different groups?
 #' @param geomean Logical, should average values be calculated as geometric means?
-#' @param gp.priority A vector
-#' @return the result of fun
-#' @examples
-#' #to do
+#' @param gp.priority A vector indicating which levels should be compared in priority
+#' @return A data frame of variables arranged by a parameter selected to classify data
 #' @export
 trident.arrange <- function(df, y, by = "hsd.mean.p.value", alpha = 0.05, byngr = FALSE, geomean = FALSE, gp.priority = c(1:length(levels(y)))) {
   #check data structure

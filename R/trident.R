@@ -9,7 +9,6 @@
 usethis::use_package("car", type = "Imports")
 usethis::use_package("colorspace", type = "Imports")
 usethis::use_package("DescTools", type = "Imports")
-usethis::use_package("DiagrammeR", type = "Imports")
 usethis::use_package("doSNOW", type = "Imports")
 usethis::use_package("dplyr", type = "Imports")
 usethis::use_package("factoextra", type = "Imports")

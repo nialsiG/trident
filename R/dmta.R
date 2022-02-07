@@ -1,14 +1,12 @@
 # dmta.spatial----
 #' @title dmta.spatial
-#' @description Description
+#' @description Computes spatial variables
 #' @param sur surface file
 #' @param size.x total x length of the surface, in pixels
 #' @param size.y total y length of the surface, in pixels
 #' @param size.n in case type = "multi", the number of cells for the calculation of heterogeneity
 #' @param type character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")
-#' @return the result of fun
-#' @examples
-#' #to do
+#' @return A list containing the .sur file, the type (spatial), Rmax, Sal, Stri, Std, b.sl, r.sl and s.sl
 #' @export
 dmta.spatial <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "single") {
   #1-Preparation
@@ -85,15 +83,13 @@ dmta.spatial <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "
 
 # dmta.asfc----
 #' @title dmta.asfc
-#' @description Description
+#' @description Computes complexity variables
 #' @param sur surface file
 #' @param size.x total x length of the surface, in pixels
 #' @param size.y total y length of the surface, in pixels
 #' @param size.n in case type = "multi", the number of cells for the calculation of heterogeneity
 #' @param type character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")
-#' @return the result of fun
-#' @examples
-#' #to do
+#' @return A list containing the .sur file, the type (complexity), Asfc2 and R2adj
 #' @export
 dmta.asfc <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "single") {
   #1-Preparation
@@ -156,7 +152,7 @@ dmta.asfc <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "sin
   Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 4))
   Asfc <- list(file = Filename,
                type = "complexity",
-               asfc2 = - 1000 * as.numeric(Results[, 1]),
+               asfc2 = as.numeric(Results[, 1]),
                r2adj = as.numeric(Results[, 2]))
   names(Asfc) <- c("File", "Type", "Asfc2", "R2adj")
   return(Asfc)
@@ -164,13 +160,13 @@ dmta.asfc <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "sin
 
 # dmta.height----
 #' @title dmta.height
-#' @description Description
+#' @description Computes height variables
 #' @param sur surface file
 #' @param size.x total x length of the surface, in pixels
 #' @param size.y total y length of the surface, in pixels
 #' @param size.n in case type = "multi", the number of cells for the calculation of heterogeneity
 #' @param type character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")
-#' @return the result of fun
+#' @return A list containing the .sur file, the type (height), Sa, Sp, Sq, Sv, Ssk, Sku, Sdar, Sm and Smd
 #' @examples
 #' #to do
 #' @export
@@ -288,15 +284,13 @@ dmta.height <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "s
 
 # dmta.topology----
 #' @title dmta.topology
-#' @description Description
+#' @description Computes topology variables
 #' @param sur surface file
 #' @param size.x total x length of the surface, in pixels
 #' @param size.y total y length of the surface, in pixels
 #' @param size.n in case type = "multi", the number of cells for the calculation of heterogeneity
 #' @param type character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")
-#' @return the result of fun
-#' @examples
-#' #to do
+#' @return A list containing the .sur file, the type (topology), Sk1, Sk2, Smc1, Smc2, Snb1, Snb2 and Sh
 #' @export
 dmta.topology <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = "single") {
   #1-Preparation
@@ -388,33 +382,31 @@ dmta.topology <- function(sur, size.x = 256, size.y = 256, size.n = 256, type = 
   #5-Scan and return the results
   Scanned <- scan(file = file.path(Tmp, "results_topology.txt"), what = "character()")
   Scanned2 <- scan(file = file.path(Tmp, "results_faces.txt"), what = "character()")
-  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur")))], nrow = 12))
+  Results <- t(matrix(Scanned[-(1:which(stringr::str_detect(Scanned, ".sur"))[1])], nrow = 12))
   Results2 <- t(matrix(Scanned2[-(1:which(stringr::str_detect(Scanned2, ".sur")))], nrow = 4))
   Filename <- paste0(utils::tail(unlist(strsplit(Scanned2[1:which(stringr::str_detect(Scanned2, ".sur"))], "/")), which(stringr::str_detect(Scanned2, ".sur"))), collapse = " ")
   Topology <- list(file = Filename,
                    type = "topology",
                    Sk1 = as.numeric(Results[, 3]),
                    Sk2 = as.numeric(Results[, 6]),
-                   Scm1 = as.numeric(Results[, 2]),
-                   Scm2 = as.numeric(Results[, 5]),
+                   Smc1 = as.numeric(Results[, 2]),
+                   Smc2 = as.numeric(Results[, 5]),
                    Snb1 = as.numeric(Results[, 1]),
                    Snb2 = as.numeric(Results[, 4]),
                    Sh = as.numeric(Results2[, 1]))
 
-  names(Topology) <- c("File", "Type", "Sk1", "Sk2", "Scm1", "Scm2", "Snb1", "Snb2", "Sh")
+  names(Topology) <- c("File", "Type", "Sk1", "Sk2", "Smc1", "Smc2", "Snb1", "Snb2", "Sh")
   return(Topology)
 }
 
 # polynom.sur----
 #' @title polynom.sur
-#' @description Description
+#' @description A function to remove a given polynom from a surface
 #' @param sur surface file
 #' @param deg the polynom degree to be substracted to the surface
 #' @param path logical, indicates if the path of the cleaned surface should be returned as a character string in R
 #' @param copy logical, indicates if a copy of the cleaned .sur file should be made in the working directory. If FALSE, it remains in a temporary file
 #' @return a cleaned surface, with a path to its current location if path = TRUE (default)
-#' @examples
-#' #to do
 #' @export
 polynom.sur <- function(sur, deg = 8, path = TRUE, copy = FALSE) {
 
@@ -474,12 +466,10 @@ polynom.sur <- function(sur, deg = 8, path = TRUE, copy = FALSE) {
 
 # trident.hetero----
 #' @title trident.hetero
-#' @description Description
+#' @description Heterogeneity of dmta variables
 #' @param x A numeric vector
 #' @param var.name A character string defining the name of the variable from which heterogeneity should be computed; default 'X'
 #' @return A data frame of parameters assessing heterogeneity
-#' @examples
-#' #to do
 #' @export
 trident.hetero <- function(x, var.name ="X") {
   if (!is.numeric(x)) stop("x has to be a numeric vector")
