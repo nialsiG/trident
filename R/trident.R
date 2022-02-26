@@ -11,6 +11,7 @@ usethis::use_package("colorspace", type = "Imports")
 usethis::use_package("DescTools", type = "Imports")
 usethis::use_package("doSNOW", type = "Imports")
 usethis::use_package("dplyr", type = "Imports")
+usethis::use_package("EnvStats", type = "Imports")
 usethis::use_package("factoextra", type = "Imports")
 usethis::use_package("foreach", type = "Imports")
 usethis::use_package("ggplot2", type = "Imports")
@@ -30,5 +31,7 @@ usethis::use_package("stringr", type = "Imports")
 usethis::use_package("svglite", type = "Imports")
 usethis::use_package("tcltk2", type = "Imports")
 usethis::use_package("tools", type = "Imports")
-usethis::use_package("tkrplot", type = "Imports")
 usethis::use_package("tkRplotR", type = "Imports")
+
+
+

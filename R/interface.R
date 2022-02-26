@@ -4,7 +4,7 @@
 trident.gui <- function() {
   # TCLTK OBJECTS----
   # ...Metadata
-  METADATA <- list(VERSION = '1.2.0', DESCRIPTION = "Changing environment")
+  METADATA <- list(VERSION = '1.2.2', DESCRIPTION = "Lots of boxes")
   # ...Project data to be saved
   PROJECT <- NULL
   PROJECT <- list(SAVESTATE = FALSE,
@@ -78,6 +78,29 @@ trident.gui <- function() {
   SCREEN.RES$H <- testh[!is.na(testh)]
   testv <- suppressWarnings(as.double(unlist(strsplit(system("wmic path Win32_VideoController get CurrentVerticalResolution /format:value", intern = TRUE), "="))))
   SCREEN.RES$V <- testv[!is.na(testv)]
+
+  # non-tcltk commands----
+  # A function to make convex hulls on pca plots
+  # Source: https://cran.r-project.org/web/packages/ggplot2/vignettes/extending-ggplot2.html
+  StatChull <- ggplot2::ggproto("StatChull", ggplot2::Stat,
+                       compute_group = function(data, scales) {
+                         data[grDevices::chull(data$x, data$y), , drop = FALSE]
+                       },
+
+                       required_aes = c("x", "y")
+  )
+
+  stat_chull <- function(mapping = NULL, data = NULL, geom = "polygon",
+                         position = "identity", na.rm = FALSE, show.legend = NA,
+                         inherit.aes = TRUE, ...) {
+    ggplot2::layer(
+      stat = StatChull, data = data, mapping = mapping, geom = geom,
+      position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+      params = list(na.rm = na.rm, ...)
+    )
+  }
+
+
 
   # TCLTK COMMANDS----
   # ...disable.cmd----
@@ -1079,32 +1102,69 @@ trident.gui <- function() {
       }
 
       # ...a second window to select which PC to plot
-      .TRIDENT$PCSelect5678 <<- tcltk::tktoplevel()
-      tcltk::tkwm.title(.TRIDENT$PCSelect5678, paste("trident", METADATA$VERSION, "- Screeplot..."))
-      tcltk2::tk2ico.setFromFile(.TRIDENT$PCSelect5678, system.file("extdata","pics","trident.ico", package = "trident"))
-      TKPLOT <- NULL
+      .TRIDENT$PLOT <- tcltk::tktoplevel()
+      tcltk::tkwm.title(.TRIDENT$PLOT, paste("trident", METADATA$VERSION))
+      tcltk2::tk2ico.setFromFile(.TRIDENT$PLOT, system.file("extdata","pics","trident.ico", package = "trident"))
+
+      # Bring to top
+      tcltk::tcl("wm", "attributes", .TRIDENT$PLOT, topmost = TRUE)
+      tcltk::tcl("wm", "attributes", .TRIDENT$PLOT, topmost = FALSE)
+
+      # Build re-sizable screeplot
       SCREEPLOT <- factoextra::fviz_eig(Mypca, addlabels = TRUE, ylim = c(0, max(Mypca$eig[, 2])), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
-      TKPLOT <- tkrplot::tkrplot(.TRIDENT$PCSelect5678, fun = function() graphics::plot(SCREEPLOT))
-      MYPCLIST1 <- tcltk2::tk2listbox(.TRIDENT$PCSelect5678, values = colnames(Mypca$ind$coord), selectmode = "single", height = 6, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
-      MYPCLIST2 <- tcltk2::tk2listbox(.TRIDENT$PCSelect5678, values = colnames(Mypca$ind$coord), selectmode = "single", height = 6, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+      tkRplotR::tkRplot(W = .TRIDENT$PLOT,
+                        fun = function() graphics::plot(SCREEPLOT),
+                        width = 600,
+                        height = 500)
+
+      .TRIDENT$PLOT$BUTTONS <- tcltk::tkframe(.TRIDENT$PLOT)
+      tcltk::tkpack(.TRIDENT$PLOT$BUTTONS, side = "left")
+      .TRIDENT$PLOT$BUTTONS2 <- tcltk::tkframe(.TRIDENT$PLOT)
+      tcltk::tkpack(.TRIDENT$PLOT$BUTTONS2, side = "left")
+      # listboxes
+      MYPCLIST1 <- tcltk2::tk2listbox(.TRIDENT$PLOT$BUTTONS, values = colnames(Mypca$ind$coord), selectmode = "single", height = 6, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
+      MYPCLIST2 <- tcltk2::tk2listbox(.TRIDENT$PLOT$BUTTONS, values = colnames(Mypca$ind$coord), selectmode = "single", height = 6, tip = "", scroll = "y", autoscroll = "x", enabled = TRUE)
       tcltk::tkselection.set(MYPCLIST1, 0)
       tcltk::tkselection.set(MYPCLIST2, 1)
+      # Checkbuttons
+      .TRIDENT$Ellipse <<- tcltk::tclVar("0")
+      ELLIPSE.CHKBTN <- tcltk2::tk2checkbutton(.TRIDENT$PLOT$BUTTONS2, text = "Ellipse")
+      tcltk::tkconfigure(ELLIPSE.CHKBTN, variable = .TRIDENT$Ellipse)
 
-      PLOT.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
-                                  text = "Plot",
+      .TRIDENT$Convexhull <<- tcltk::tclVar("0")
+      CHULL.CHKBTN <- tcltk2::tk2checkbutton(.TRIDENT$PLOT$BUTTONS2, text = "Convex hull")
+      tcltk::tkconfigure(CHULL.CHKBTN, variable = .TRIDENT$Convexhull)
+
+      PLOT.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
+                                                              text = "Plot",
                                   relief = "raised",
                                   command = function() {
 
                                     # ...Build plot
-                                    Plot <- factoextra::fviz_pca_ind(Mypca, axes = c(tcltk2::selection(MYPCLIST1), tcltk2::selection(MYPCLIST2)),
+                                    if (tcltk::tclvalue(.TRIDENT$Ellipse) == "1") {
+                                      Plot <- factoextra::fviz_pca_ind(Mypca, axes = c(tcltk2::selection(MYPCLIST1), tcltk2::selection(MYPCLIST2)),
                                                                      geom = c("point", "text"),
                                                                      repel = FALSE,
-                                                                     col.ind = "transparent",
                                                                      col.ind.sup = "hotpink",
-                                                                     #habillage = Factors[, Myfactor],
-                                                                     #addEllipses = TRUE,
-                                                                     pointsize = 3,
-                                                                     pointshape = 8) +
+                                                                     col.ind = "transparent",
+                                                                     label = "ind.sup",
+                                                                     ellipse.alpha = 0,
+                                                                     habillage = Factors[, Myfactor],
+                                                                     addEllipses = TRUE,
+                                                                     ellipse.level = 0.95,
+                                                                     pointsize = 3)
+                                    }
+                                    if (tcltk::tclvalue(.TRIDENT$Ellipse) == "0") {
+                                      Plot <- factoextra::fviz_pca_ind(Mypca, axes = c(tcltk2::selection(MYPCLIST1), tcltk2::selection(MYPCLIST2)),
+                                                                       geom = c("point", "text"),
+                                                                       repel = FALSE,
+                                                                       col.ind.sup = "hotpink",
+                                                                       col.ind = "transparent",
+                                                                       label = "ind.sup",
+                                                                       pointsize = 3)
+                                    }
+
+                                    Plot <- Plot +
                                       ggplot2::labs(x = paste(colnames(Mypca$ind$coord)[tcltk2::selection(MYPCLIST1)], " (", round(Mypca$eig[tcltk2::selection(MYPCLIST1), 2], 1), " %)", sep = ""),
                                                     y = paste(colnames(Mypca$ind$coord)[tcltk2::selection(MYPCLIST2)], " (", round(Mypca$eig[tcltk2::selection(MYPCLIST2), 2], 1), " %)", sep = "")) +
                                       ggplot2::guides(size = "none") +
@@ -1125,11 +1185,17 @@ trident.gui <- function() {
                                       ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2))) +
                                       ggplot2::labs(title = NULL)
 
+                                    # ...convex hull
+                                    if (tcltk::tclvalue(.TRIDENT$Convexhull) == "1") {
+                                      Plot <- Plot + stat_chull(ggplot2::aes(shape = Factors[, Myfactor], color = Factors[, Myfactor], fill = Factors[, Myfactor]), alpha = 0)
+
+                                      }
+
                                     # ...Make plot window
                                     make.plot.cmd(myplot = Plot)
                                   })
 
-      PLOT.COR.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
+      PLOT.COR.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
                                       text = "Correlation\ncircle",
                                       relief = "raised",
                                       command = function() {
@@ -1159,7 +1225,7 @@ trident.gui <- function() {
                                         make.plot.cmd(myplot = Plot2)
                                       })
 
-      ADD.SUP.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
+      ADD.SUP.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
                                      text = "Add individuals",
                                      relief = "raised",
                                      command = function() {
@@ -1218,12 +1284,12 @@ trident.gui <- function() {
                                        }
                                      })
 
-      SAVE.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
+      SAVE.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
                                   text = "Save",
                                   relief = "raised",
                                   command = function() {
 
-                                    sink(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = .TRIDENT$PCSelect5678, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
+                                    sink(file = tcltk::tclvalue(tcltk::tkgetSaveFile(parent = .TRIDENT$PLOT, title = "Save PCs as...", initialfile = paste("Untitled"), defaultextension = ".txt")))
                                     cat("Eigenvalues\n")
                                     print(factoextra::get_eigenvalue(Mypca), quote = FALSE)
                                     cat("\n")
@@ -1273,7 +1339,7 @@ trident.gui <- function() {
                                     sink()
                                   })
 
-      EXPORT.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
+      EXPORT.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
                                     text = "Export",
                                     relief = "raised",
                                     command = function() {
@@ -1295,33 +1361,30 @@ trident.gui <- function() {
                                       tcltk::tkgrid(CONFIRM.BTN, CANCEL.BTN)
                                     })
 
-      DONE.BTN <- tcltk::tkbutton(.TRIDENT$PCSelect5678,
-                                  text = "Done!",
+      BOXPLOT.BTN <- tcltk::tkbutton(.TRIDENT$PLOT$BUTTONS2,
+                                  text = "Boxplot",
                                   relief = "raised",
-                                  command = function() tcltk::tkdestroy(.TRIDENT$PCSelect5678))
+                                  command = function() {
+                                    Myboxplotdf <- dplyr::bind_cols(Factors, data.frame(Mypca$ind$coord))
+                                    boxplot.cmd(Myboxplotdf)
+                                  })
 
       tcltk::tkdestroy(.TRIDENT$VarSelect1234)
 
+
       # Grid all
-      tcltk::tkgrid(TKPLOT, columnspan = 2)
-      tcltk::tkgrid(tcltk::tklabel(.TRIDENT$PCSelect5678, text = "Select PCs:"),
+      tcltk::tkgrid(tcltk::tklabel(.TRIDENT$PLOT$BUTTONS, text = "Select PCs:"),
                     columnspan = 2)
       tcltk::tkgrid(MYPCLIST1, MYPCLIST2)
-      tcltk::tkgrid(PLOT.BTN,
-                    DONE.BTN,
-                    sticky = "ew",
+
+      tcltk::tkgrid(ELLIPSE.CHKBTN, CHULL.CHKBTN)
+      tcltk::tkgrid(PLOT.BTN, PLOT.COR.BTN, SAVE.BTN,
+                    sticky = "nsew",
                     ipady = 5,
                     pady = 5,
                     padx = 5)
-      tcltk::tkgrid(ADD.SUP.BTN,
-                    PLOT.COR.BTN,
-                    sticky = "ew",
-                    ipady = 5,
-                    pady = 5,
-                    padx = 5)
-      tcltk::tkgrid(SAVE.BTN,
-                    EXPORT.BTN,
-                    sticky = "ew",
+      tcltk::tkgrid(BOXPLOT.BTN, ADD.SUP.BTN, EXPORT.BTN,
+                    sticky = "nsew",
                     ipady = 5,
                     pady = 5,
                     padx = 5)
@@ -1333,6 +1396,7 @@ trident.gui <- function() {
     tcltk::tkgrid(tcltk::tklabel(.TRIDENT$VarSelect1234, text = "Choose variables"),
                   tcltk::tklabel(.TRIDENT$VarSelect1234, text = "Choose supplementary\nvariables (optional)"),
                   tcltk::tklabel(.TRIDENT$VarSelect1234, text = "Choose factor"))
+
     tcltk::tkgrid(VARLIST, SUPVARLIST, FACTORLIST)
     tcltk::tkgrid(OK.BTN, CANCEL.BTN)
   }
@@ -2701,6 +2765,53 @@ trident.gui <- function() {
       tcltk::tkgrid(YLIST, columnspan = 2, padx = 5, pady = 5)
       tcltk::tkgrid(OK.BTN, CANCEL.BTN, padx = 5, pady = 5)
     })
+
+    tcltk::tkadd(TRANS.MENU, "command", label = "Log transformation", command = function() {
+      # ...prepare data: removal of Na, NaN, Inf and -Inf
+      Mydf <- PROJECT$DATASET
+      Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+      Mydf <- stats::na.omit(Mydf)
+      Numerics <- dplyr::select_if(Mydf, is.numeric)
+      Factors <- dplyr::select_if(Mydf, is.factor)
+
+      data.translation <- function(x) return(x - min(x) + 1)
+
+      for (i in 1:length(colnames(Numerics))) {
+        Myx <- Numerics[, i]
+        if (!is.na(max(Myx))) {
+          Myx <- data.translation(Myx)
+          Numerics[, i] <- log(Myx)
+          PROJECT$VARIABLES$Variables[which(PROJECT$VARIABLES$Variables == colnames(Numerics)[i])]  <<- paste(colnames(Numerics)[i], ".log", sep = ".")
+          colnames(Numerics)[i] <- paste(colnames(Numerics)[i], ".log", sep = "")
+        }
+      }
+      PROJECT$DATASET <<- data.frame(Factors, Numerics)
+      refresh.cmd()
+    })
+
+    tcltk::tkadd(TRANS.MENU, "command", label = "Log10 transformation", command = function() {
+      # ...prepare data: removal of Na, NaN, Inf and -Inf
+      Mydf <- PROJECT$DATASET
+      Mydf <- Mydf[!is.infinite(rowSums(dplyr::select_if(Mydf, is.numeric))), ]
+      Mydf <- stats::na.omit(Mydf)
+      Numerics <- dplyr::select_if(Mydf, is.numeric)
+      Factors <- dplyr::select_if(Mydf, is.factor)
+
+      data.translation <- function(x) return(x - min(x) + 1)
+
+      for (i in 1:length(colnames(Numerics))) {
+        Myx <- Numerics[, i]
+        if (!is.na(max(Myx))) {
+            Myx <- data.translation(Myx)
+            Numerics[, i] <- log10(Myx)
+            PROJECT$VARIABLES$Variables[which(PROJECT$VARIABLES$Variables == colnames(Numerics)[i])]  <<- paste(colnames(Numerics)[i], ".log10", sep = ".")
+            colnames(Numerics)[i] <- paste(colnames(Numerics)[i], ".log10", sep = "")
+        }
+      }
+        PROJECT$DATASET <<- data.frame(Factors, Numerics)
+        refresh.cmd()
+      })
+
     #
     # ...Grid all 'Data'----
     tcltk::tkgrid(OPEN.BTN, COMBINE.BTN, BUILD.BTN, REMOVE.BTN, TRANS.MBTN, REFRESH.BTN, padx = 5, pady = 10, ipadx = 5, ipady = 10, sticky = "ns")
@@ -2708,6 +2819,7 @@ trident.gui <- function() {
     tcltk2::tk2tip(OPEN.BTN, "Open data")
     tcltk2::tk2tip(BUILD.BTN, "Build new dataset")
     tcltk2::tk2tip(COMBINE.BTN, "Combine two or more datasets")
+    tcltk2::tk2tip(REMOVE.BTN, "Remove cases from dataset")
     tcltk2::tk2tip(REFRESH.BTN, "Refresh tables")
     tcltk2::tk2tip(TRANS.MBTN, "Apply transformation algorithms to current dataset")
     # ...Shortcuts 'Data'----
@@ -3009,7 +3121,7 @@ trident.gui <- function() {
         # 2nd case: there are some discriminant variables
         if (length(Mycheck$variable[which(Mycheck$is.discriminant == TRUE)]) != 0) {
           Mytable <- data.frame(Variable = Mycheck$variable[which(Mycheck$is.discriminant == TRUE)])
-          Numerics <- Numerics[, rownames(Mytable)]
+          Numerics <- Numerics[, Mycheck$variable[which(Mycheck$is.discriminant == TRUE)]]
           # ......Build window with table
           .TRIDENT$TableWin1234 <<- tcltk::tktoplevel()
           tcltk::tkwm.title(.TRIDENT$TableWin1234, paste("trident", METADATA$VERSION, "- List of discriminant variables"))

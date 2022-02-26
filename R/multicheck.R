@@ -24,9 +24,9 @@ multicheck <- function(df, y, alpha = 0.05) {
   doSNOW::registerDoSNOW(snow::makeSOCKcluster(parallel::detectCores() - 1))
 
   # Parameters
-  IS.NORMAL <- c(colnames(df))
-  IS.HOMOSCEDASTIC <- c(colnames(df))
-  IS.DISCRIMINANT <- c(colnames(df))
+  IS.NORMAL <- rep("FALSE", length(colnames(df)))
+  IS.HOMOSCEDASTIC <- rep("FALSE", length(colnames(df)))
+  IS.DISCRIMINANT <- rep("FALSE", length(colnames(df)))
   VARIABLES <- c(colnames(df))
   #P.ANOVA <- foreach::foreach(i = 1:length(df[1, ])) %dopar% stats::oneway.test(formula = df[, i] ~ Myfactor, data = df, subset = NULL, na.action = "na.omit")$p.value
   P.ANOVA <- foreach::foreach(i = 1:length(Mymatrix[, 1]), .combine = "c") %dopar% stats::oneway.test(formula = Mymatrix[i, ] ~ Myfactor, data = Mymatrix, subset = NULL, na.action = "na.omit")$p.value
