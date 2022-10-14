@@ -18,11 +18,8 @@ dmta.asfc(sur, size.x = 256, size.y = 256, size.n = 256, type = "single")
 \item{type}{character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")}
 }
 \value{
-the result of fun
+A list containing the .sur file, the type (complexity), Asfc2 and R2adj
 }
 \description{
-Description
-}
-\examples{
-#to do
+Computes complexity variables
 }

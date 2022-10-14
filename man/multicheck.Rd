@@ -2,7 +2,7 @@
 % Please edit documentation in R/multicheck.R
 \name{multicheck}
 \alias{multicheck}
-\title{multicheck2}
+\title{multicheck}
 \usage{
 multicheck(df, y, alpha = 0.05)
 }
@@ -18,7 +18,4 @@ A list of ratios and p-values for all the options which where selected using che
 }
 \description{
 Perform various statistical checks
-}
-\examples{
-#to do
 }

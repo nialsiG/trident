@@ -28,14 +28,11 @@ Should be in c("f.stat", "aov.p.value", "k", "k.p.value", "hsd.p.value", "hsd.me
 
 \item{geomean}{Logical, should average values be calculated as geometric means?}
 
-\item{gp.priority}{A vector}
+\item{gp.priority}{A vector indicating which levels should be compared in priority}
 }
 \value{
-the result of fun
+A data frame of variables arranged by a parameter selected to classify data
 }
 \description{
 Classify variables by their ability to discriminate categories
-}
-\examples{
-#to do
 }

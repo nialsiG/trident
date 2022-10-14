@@ -19,9 +19,3 @@ A list containing a dataframe of the transformed values
 \description{
 Transforms x according to the Box-Cox formula, using the parameter lambda
 }
-\details{
-to do
-}
-\examples{
-#to do
-}

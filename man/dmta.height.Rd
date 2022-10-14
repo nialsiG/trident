@@ -18,10 +18,10 @@ dmta.height(sur, size.x = 256, size.y = 256, size.n = 256, type = "single")
 \item{type}{character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")}
 }
 \value{
-the result of fun
+A list containing the .sur file, the type (height), Sa, Sp, Sq, Sv, Ssk, Sku, Sdar, Sm and Smd
 }
 \description{
-Description
+Computes height variables
 }
 \examples{
 #to do
