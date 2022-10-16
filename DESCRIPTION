@@ -43,5 +43,7 @@ Imports:
     EnvStats,
     shiny,
     data.table,
-    DT
+    DT,
+    shinyjs,
+    glue
 RoxygenNote: 7.2.1

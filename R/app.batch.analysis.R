@@ -1,3 +1,4 @@
+################################################################################
 batchAnalysisUI <- function(id) {
   ns <- NS(id)
   tagList(
@@ -10,7 +11,6 @@ batchAnalysisUI <- function(id) {
                    "0", "2", "8"
                  )),
 
-    #"Parameters"
     h5("Parameters:"),
 
     fluidRow(
@@ -19,8 +19,8 @@ batchAnalysisUI <- function(id) {
              checkboxInput(ns("height"), "Height parameters", TRUE),
              checkboxInput(ns("spatial"), "Spatial parameters", TRUE),
              checkboxInput(ns("topology"), "Topology", TRUE)
-             )
-      ),
+      )
+    ),
 
     fluidRow(
       column(3,
@@ -46,38 +46,18 @@ batchAnalysisUI <- function(id) {
 
     textOutput(ns("txt")),
     tableOutput(ns("values")),
-
-
-      )
-
+  )
 }
 
-
+################################################################################
 batchAnalysisServer <- function(id) {
   moduleServer(id, function(input, output, session) {
-
-
 
     #Launcg batch analysis button----
     observeEvent(input$launchBatch, {
 
 
-
-
     })
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #DEBUG LOG----
     output$txt <- renderText({

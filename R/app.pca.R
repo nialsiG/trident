@@ -1,24 +1,15 @@
 ################################################################################
-graphicsUI <- function(id) {
+PCAUI <- function(id) {
   ns <- NS(id)
   tagList(
-    actionButton(ns("boxplot"), "Box Plot"),
-    actionButton(ns("violin"), "Violin Plot"),
-    hr(),
+
     textOutput(ns("feedback"))
-)
+  )
 }
 
 ################################################################################
-graphicsServer <- function(id) {
+PCAServer <- function(id) {
   moduleServer(id, function(input, output, session) {
-
-    #change to violin button----
-    observeEvent(input$violin, {})
-
-    #change to boxplot button----
-    observeEvent(input$boxplot, {})
-
 
     output$feedback <- shiny::renderText("This is a test")
 
