@@ -29,7 +29,11 @@ multicheck <- function(df, y, alpha = 0.05) {
   IS.DISCRIMINANT <- rep("FALSE", length(colnames(df)))
   VARIABLES <- c(colnames(df))
   #P.ANOVA <- foreach::foreach(i = 1:length(df[1, ])) %dopar% stats::oneway.test(formula = df[, i] ~ Myfactor, data = df, subset = NULL, na.action = "na.omit")$p.value
-  P.ANOVA <- foreach::foreach(i = 1:length(Mymatrix[, 1]), .combine = "c") %dopar% stats::oneway.test(formula = Mymatrix[i, ] ~ Myfactor, data = Mymatrix, subset = NULL, na.action = "na.omit")$p.value
+  P.ANOVA <- foreach::foreach(i = 1:length(Mymatrix[, 1]), .combine = "c") %dopar% {
+    Result = stats::oneway.test(formula = Mymatrix[i, ] ~ Myfactor, data = Mymatrix, subset = NULL, na.action = "na.omit")$p.value
+    if (is.na(Result) || !is.numeric(Result)) Result = NA
+    Result
+  }
   P.KRUSKAL <- foreach::foreach(i = 1:length(Mymatrix[, 1]), .combine = "c") %dopar% stats::kruskal.test(Mymatrix[i, ] ~ Myfactor)$p.value
   # Variables based on AOV residuals:
   Residuals <- foreach::foreach(i = 2:length(Mydf[1, ])) %dopar% stats::aov(Mydf[, i] ~ Mydf[, 1])$residuals
@@ -52,7 +56,11 @@ multicheck <- function(df, y, alpha = 0.05) {
   # Variance ratio
   VariancePerCategory <- foreach::foreach(j = 1:length(levels(Myfactor)), .combine = "cbind") %:%
     foreach::foreach(i = 1:length(Residuals[, 1]), .combine = "c") %dopar% stats::var(Residuals[i, which(Myfactor == levels(Myfactor)[j])])
-  VAR.RATIO <- foreach::foreach(i = 1:length(Residuals[, 1]), .combine = "c") %dopar% {max(VariancePerCategory[i, ]) / min(VariancePerCategory[i, ])}
+  VAR.RATIO <- foreach::foreach(i = 1:length(Residuals[, 1]), .combine = "c") %dopar% {
+    if (min(VariancePerCategory[i, ] != 0)) Result = max(VariancePerCategory[i, ]) / min(VariancePerCategory[i, ])
+        else Result = NA
+        Result
+    }
 
   #Decision tree
     IS.NORMAL[P.SHAPIRO > alpha] <- TRUE

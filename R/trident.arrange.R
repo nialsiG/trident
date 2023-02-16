@@ -20,6 +20,12 @@ trident.arrange <- function(df, y, by = "hsd.mean.p.value", alpha = 0.05, byngr 
   #changing levels of factor if gp.priority
   if (length(gp.priority) == length(levels(y))) y <- factor(y, levels = levels(y)[gp.priority])
   if (length(gp.priority) < length(levels(y))) y <- factor(y, levels = c(levels(y)[gp.priority], levels(y)[- gp.priority]))
+  if (length(gp.priority) ==2) #pairwise
+  {
+    pairElement1 <- gp.priority[1]
+    pairElement2 <- gp.priority[2]
+    y <- factor(y, levels = c(levels(y)[pairElement1], levels(y)[pairElement2], levels(y)[- gp.priority]))
+  }
 
   #Preparation of dataset: removal of Na, NaN, Inf and -Inf:
   Mydf <- data.frame(as.factor(y), df)
