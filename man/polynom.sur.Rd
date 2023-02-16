@@ -19,8 +19,5 @@ polynom.sur(sur, deg = 8, path = TRUE, copy = FALSE)
 a cleaned surface, with a path to its current location if path = TRUE (default)
 }
 \description{
-Description
-}
-\examples{
-#to do
+A function to remove a given polynom from a surface
 }

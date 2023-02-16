@@ -15,8 +15,5 @@ trident.hetero(x, var.name = "X")
 A data frame of parameters assessing heterogeneity
 }
 \description{
-Description
-}
-\examples{
-#to do
+Heterogeneity of dmta variables
 }

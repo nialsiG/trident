@@ -12,11 +12,8 @@ sur.read(sur, type = "xyz")
 \item{type}{character vector indicating the desired output format - either a matrix of heights, or a data.frame with x, y and z as columns}
 }
 \value{
-the result of fun
+A data frame or a matrix of the 3d coordinates of the surface
 }
 \description{
-Description
-}
-\examples{
-#to do
+Read .SUR files
 }

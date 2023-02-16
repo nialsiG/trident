@@ -18,11 +18,8 @@ dmta.spatial(sur, size.x = 256, size.y = 256, size.n = 256, type = "single")
 \item{type}{character vector indicating whether a single value should be calculated for the whole surface ("single"); or if multiple values should be calculated for each n cells ("multi")}
 }
 \value{
-the result of fun
+A list containing the .sur file, the type (spatial), Rmax, Sal, Stri, Std, b.sl, r.sl and s.sl
 }
 \description{
-Description
-}
-\examples{
-#to do
+Computes spatial variables
 }

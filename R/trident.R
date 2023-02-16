@@ -2,36 +2,46 @@
 #' @description A package for statistical processing of DMTA files
 #' @docType package
 #' @name trident
+#' @importFrom plyr "colwise"
+#' @importFrom dplyr "bind_cols"
+#' @importFrom dplyr "union"
+#' @importFrom dplyr "select_if"
+#' @importFrom car "leveneTest"
+#' @importFrom DescTools "Skew"
+#' @importFrom DescTools "Kurt"
+#' @importFrom DescTools "PostHocTest"
+#' @importFrom doSNOW "registerDoSNOW"
+#' @importFrom DT "datatable"
+#' @importFrom FactoMineR "PCA"
 #' @importFrom foreach "%dopar%"
 #' @importFrom foreach "%:%"
-#'
-#'
-usethis::use_package("car", type = "Imports")
-usethis::use_package("colorspace", type = "Imports")
-usethis::use_package("DescTools", type = "Imports")
-usethis::use_package("doSNOW", type = "Imports")
-usethis::use_package("dplyr", type = "Imports")
-usethis::use_package("EnvStats", type = "Imports")
-usethis::use_package("factoextra", type = "Imports")
-usethis::use_package("foreach", type = "Imports")
-usethis::use_package("ggplot2", type = "Imports")
-usethis::use_package("grDevices", type = "Imports")
-usethis::use_package("gtools", type = "Imports")
-usethis::use_package("imager", type = "Imports")
-usethis::use_package("MASS", type = "Imports")
-usethis::use_package("nortest", type = "Imports")
-usethis::use_package("parallel", type = "Imports")
-usethis::use_package("picante", type = "Imports")
-usethis::use_package("plyr", type = "Imports")
-usethis::use_package("rgl", type = "Imports")
-usethis::use_package("rlist", type = "Imports")
-usethis::use_package("snow", type = "Imports")
-usethis::use_package("stats", type = "Imports")
-usethis::use_package("stringr", type = "Imports")
-usethis::use_package("svglite", type = "Imports")
-usethis::use_package("tcltk2", type = "Imports")
-usethis::use_package("tools", type = "Imports")
-usethis::use_package("tkRplotR", type = "Imports")
-
-
-
+#' @importFrom foreach "foreach"
+#' @importFrom MASS "boxcox"
+#' @importFrom nortest "ad.test"
+#' @importFrom parallel "detectCores"
+#' @importFrom snow "makeSOCKcluster"
+#' @importFrom stats "var"
+#' @importFrom stats "kruskal.test"
+#' @importFrom stats "aov"
+#' @importFrom stats "qchisq"
+#' @importFrom stats "formula"
+#' @importFrom stats "bartlett.test"
+#' @importFrom stats "shapiro.test"
+#' @importFrom stats "oneway.test"
+#' @importFrom stats "sd"
+#' @importFrom stats "na.omit"
+#' @importFrom stats "quantile"
+#' @importFrom stringr "str_replace_all"
+#' @importFrom stringr "str_detect"
+#' @importFrom utils "winProgressBar"
+#' @importFrom utils "write.table"
+#' @importFrom utils "tail"
+#' @importFrom utils "combn"
+#' @importFrom ggpubr "stat_chull"
+#' @import factoextra
+#' @import ggplot2
+#' @import shiny
+#' @import shinyjs
+#' @import shinyFiles
+#' @importMethodsFrom foreach
+#' @importFrom picante "cor.table"
