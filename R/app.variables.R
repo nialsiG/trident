@@ -5,7 +5,6 @@ variablesUI <- function(id) {
     useShinyjs(),
     #Help in a verbatim text output
     verbatimTextOutput(ns('text')),
-
     #Table to select a factor
     DTOutput(ns("factorTable")),
     hr(),
@@ -34,7 +33,9 @@ variablesUI <- function(id) {
              disabled(tags$button(
                id = ns("top3"),
                div(tags$img(src = "www/top3.png", height = "40px"), "Top-3"),
-               class = "btn action-button"))
+               class = "btn action-button")),
+             em("*Top3 automatically performs a Box-Cox transformation and should be reserved for untransformed data."),
+             em("**Consider saving the results of your Top3, as it will not affect variable order in other tabs.")
       ),
       #...to rank by
       column(4,
