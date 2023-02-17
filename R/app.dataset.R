@@ -11,6 +11,8 @@ datasetUI <- function(id) {
                 "text/txt",
                 "text/plain",
                 ".txt")),
+    #Remove NAs?
+    checkboxInput(ns("removeNa"), "Remove variables with NA values?", TRUE),
     #Radiobuttons----
 
     #...to select separators
@@ -79,9 +81,12 @@ datasetServer <- function(id) {
         Mydf <- stats::na.omit(Mydf)
         Numerics <- dplyr::select_if(Mydf, is.numeric)
         Factors  <- dplyr::select_if(Mydf, is.character)
-        #
+        #Remove columns with any NAs?
         isLogtransform$value <- FALSE
-        #
+        if(input$removeNa)
+        {
+          Numerics <- Numerics[, colSums(is.na(Numerics)) == 0]
+        }
         dataTrident$value <- data.frame(Factors, Numerics)
       })
 
@@ -110,7 +115,7 @@ datasetServer <- function(id) {
       Mydf <- dataTrident$value
       Factors <- dplyr::select_if(Mydf, is.character)
       Numerics <- dplyr::select_if(Mydf, is.numeric)
-      #
+      #BoxCox transform
       myBoxcox <- trident::trident.boxcox(df = Numerics, y = factor(Mydf[, input$dataset_columns_selected + 1]))
       colnames(myBoxcox$boxcox) <- paste(colnames(myBoxcox$boxcox), "boxcox", sep = ".")
       dataTrident$value <- data.frame(Factors, myBoxcox$boxcox)
@@ -121,16 +126,19 @@ datasetServer <- function(id) {
       Mydf <- dataTrident$value
       Factors <- dplyr::select_if(Mydf, is.character)
       Numerics <- dplyr::select_if(Mydf, is.numeric)
-      #
+      #Log transform
       isLogtransform$value <- TRUE
-      #
-      for (i in length(colnames(Numerics))) {
-        colMin = min(Numerics[, i])
-        Numerics[, i] = Numerics[, i] + colMin + 1
+      for (i in 1:length(Numerics[1, ])) {
+        colMin <- min(Numerics[, i])
+        Numerics[, i] <- Numerics[, i] - colMin + 1
       }
-      #
       Numerics <- log10(Numerics)
-      #
+      #Remove NA columns?
+      if(input$removeNa)
+      {
+        Numerics <- Numerics[ , colSums(is.na(Numerics)) == 0]
+      }
+
       colnames(Numerics) <- paste(colnames(Numerics), "log10", sep = ".")
       dataTrident$value <- data.frame(Factors, Numerics)
     })
