@@ -189,7 +189,12 @@ variablesServer <- function(id, data) {
       #If only discriminant variables are to be ranked
       if (input$removeNonDisc)
       {
-        Numerics <- Numerics[, which(trident::multicheck(df = Numerics, y = Factor)$is.discriminant == TRUE)]
+        Multicheck <- trident::multicheck(df = Numerics, y = Factor)
+        if(!any(as.logical(Multicheck$is.discriminant)))
+        {
+          warning("No discriminant variable found; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset")
+        }
+        else Numerics <- Numerics[, which(Multicheck$is.discriminant == TRUE)]
       }
 
       #The different modes of rank by
@@ -230,9 +235,20 @@ variablesServer <- function(id, data) {
         gp.priority = gpPriority)
 
       #Extracting the results
+      if (input$removeNonDisc && !any(as.logical(RankBy$is.discriminant)))
+      {
+        showModal(modalDialog(
+          title = "Ranking procedure has been stopped",
+          "No discriminant variable could be found; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset"
+        ))
+      }
+      else
+      {
+        v$data <- data.frame(variable = rownames(RankBy), RankBy)
+        varTrident$variables <- v$data$variable
+      }
+      #End
       v$isComputing <- FALSE
-      v$data <- data.frame(variable = rownames(RankBy), RankBy)
-      varTrident$variables <- v$data$variable
     })
 
     #...for top3
@@ -247,11 +263,21 @@ variablesServer <- function(id, data) {
       Numerics <- dplyr::select_if(Mydf, is.numeric)
       Factor  <- dplyr::select_if(Mydf, is.factor)[, input$factorTable_rows_selected]
       #TOP3
-      Mytop <- trident::trident.top3(df = Numerics, y = Factor)$ranked
-      Mytop <- data.frame(variable = rownames(Mytop), Mytop)
+      Mytop <- trident::trident.top3(df = Numerics, y = Factor)
+      if (is.null(Mytop))
+      {
+        showModal(modalDialog(
+          title = "Top 3 procedure has been stopped",
+          "No discriminant variable could be found; please try with a new dataset"
+        ))
+      }
+      else
+      {
+        Mytop <- Mytop$ranked
+        Mytop <- data.frame(variable = rownames(Mytop), Mytop)
+        v$data <- Mytop
+      }
       v$isComputing <- FALSE
-      v$data <- Mytop
-      #varTrident$variables <- v$data$variable #NO because it is not compatible with PCA with supplementary individuals
     })
 
     #Table----

@@ -22,7 +22,13 @@
     colnames(Numerics) <- paste(colnames(Numerics), "boxcox", sep = ".")
 
     # ...multicheck
-    Numerics <- Numerics[, which(trident::multicheck(df = Numerics, y = Mydf[, 1])$is.discriminant == TRUE)]
+    Multicheck <- trident::multicheck(df = Numerics, y = Mydf[, 1])
+    if(!any(as.logical(Multicheck$is.discriminant)))
+    {
+      warning("No discriminant variable found; top3 procedure aborted")
+      return(NULL)
+    }
+    else Numerics <- Numerics[, which(trident::multicheck(df = Numerics, y = Mydf[, 1])$is.discriminant == TRUE)]
 
     # ...for each group, rank variables and isolate top 3
     Mylist <- list()
