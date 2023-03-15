@@ -333,7 +333,7 @@ variablesServer <- function(id, data) {
       },
       content = function(file) {
         Mydf <- data.frame(v$data)
-        write.table(Mydf, file, quote = FALSE, row.names = FALSE, sep = "\t", row.names = FALSE)
+        write.table(Mydf, file, quote = FALSE, row.names = FALSE, sep = "\t")
       }
     )
 

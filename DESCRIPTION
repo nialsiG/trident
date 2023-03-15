@@ -1,7 +1,7 @@
 Package: trident
 Type: Package
 Title: Dental Microwear Texture Analysis
-Version: 1.3.5
+Version: 1.3.6
 Authors@R: c(
     person(given = "Ghislain", family = "Thiery", role = c("aut", "cre"), email = "ghislain.thiery@ntymail.com"),
     person(given = "Arthur", family = "Francisco", role = c("aut"), email = "arthur.francisco@univ-poitiers.fr"),
