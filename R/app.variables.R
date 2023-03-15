@@ -186,6 +186,8 @@ variablesServer <- function(id, data) {
       Numerics <- dplyr::select_if(Mydf, is.numeric)
       Factor  <- dplyr::select_if(Mydf, is.factor)[, input$factorTable_rows_selected]
 
+      Multicheck <- NULL
+
       #If only discriminant variables are to be ranked
       if (input$removeNonDisc)
       {
@@ -194,7 +196,7 @@ variablesServer <- function(id, data) {
         {
           warning("No discriminant variable found; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset")
         }
-        else Numerics <- Numerics[, which(Multicheck$is.discriminant == TRUE)]
+        else Numerics <- as.data.frame(Numerics[, which(Multicheck$is.discriminant == TRUE)])
       }
 
       #The different modes of rank by
@@ -235,7 +237,7 @@ variablesServer <- function(id, data) {
         gp.priority = gpPriority)
 
       #Extracting the results
-      if (input$removeNonDisc && !any(as.logical(RankBy$is.discriminant)))
+      if (input$removeNonDisc && !any(as.logical(Multicheck$is.discriminant)))
       {
         showModal(modalDialog(
           title = "Ranking procedure has been stopped",

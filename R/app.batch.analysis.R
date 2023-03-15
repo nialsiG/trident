@@ -7,7 +7,7 @@ batchAnalysisUI <- function(id) {
     verbatimTextOutput(ns('console')),
     #Buttons
     #...to select the SUR files for the batch analysis
-    shinyFilesButton(ns("surFiles"), "Choose a file" ,
+    shinyFilesButton(ns("surFiles"), "Choose .SUR files" ,
                               title = "Please select .SUR files:",
                               multiple = TRUE),
     hr(),
