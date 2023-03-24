@@ -30,6 +30,11 @@ univariateUI <- function(id) {
           id = ns("violin"),
           div(tags$img(src = "www/violin.png", height = "40px"), "Violin Plot"),
           class = "btn action-button")),
+        #...export table into R
+        disabled(tags$button(
+          id = ns("exportR"),
+          div(tags$img(src = "www/export.png", height = "40px"), "Export to R"),
+          class = "btn action-button")),
         hr(),
         #Graphical output
         plotOutput(ns("plot"), height = 400, width = 400)
@@ -45,6 +50,7 @@ univariateUI <- function(id) {
 #SERVER----
 univariateServer <- function(id, data, variables) {
   moduleServer(id, function(input, output, session, dataTrident = data, varTrident = variables) {
+    ns <- session$ns
 
     #Help in a verbatim text----
     output$text <- renderText({
@@ -103,7 +109,7 @@ univariateServer <- function(id, data, variables) {
       data.frame(variable = colnames(Factors), levels = sapply(Factors,lengthLevels))
     })
     #...Reactive values for choosing the type of graph output
-    v <- reactiveValues(plot = "boxplot")
+    currentPlot <- reactiveValues(plotType = "boxplot", plot = NULL)
 
     #Tables----
     #...For selecting variables
@@ -122,12 +128,12 @@ univariateServer <- function(id, data, variables) {
     #Buttons----
     #...for changing to violin plot
     observeEvent(input$violin, {
-      v$plot <- "violin"
+      currentPlot$plotType <- "violin"
     })
 
     #...for changing to boxplot
     observeEvent(input$boxplot, {
-      v$plot <- "boxplot"
+      currentPlot$plotType <- "boxplot"
     })
 
     #Plot----
@@ -149,13 +155,13 @@ univariateServer <- function(id, data, variables) {
 
       PLOT.COLORS = rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 3) #24 levels max
 
-      if(v$plot == "violin" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) == 1) {
+      if(currentPlot$plotType == "violin" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) == 1) {
         testdf <- data.frame(Factors[, input$factorTable_rows_selected], Numerics[, input$numericTable_rows_selected])
         factorName <- colnames(Factors)[input$factorTable_rows_selected]
         varName <- colnames(Numerics)[input$numericTable_rows_selected]
         colnames(testdf) <- c(factorName, varName)
 
-        ggplot2::ggplot(data = testdf, ggplot2::aes(x = "", y = testdf[, varName], group = testdf[, factorName])) +
+        currentPlot$plot <- ggplot2::ggplot(data = testdf, ggplot2::aes(x = "", y = testdf[, varName], group = testdf[, factorName])) +
           ggplot2::labs(x = "", y = varName) +
           ggplot2::guides(size = "none") +
           ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
@@ -172,16 +178,16 @@ univariateServer <- function(id, data, variables) {
           ggplot2::scale_fill_manual(name = factorName, labels = levels(as.factor(testdf[, factorName])), values = PLOT.COLORS) +
           ggplot2::geom_violin(ggplot2::aes(fill = testdf[, factorName]), scale = "area", size = 0.5) +
           ggplot2::theme(axis.text.x = ggplot2::element_blank())
-
+        currentPlot$plot
               }
 
-      else if(v$plot == "boxplot" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) == 1) {
+      else if(currentPlot$plotType == "boxplot" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) == 1) {
         testdf <- data.frame(Factors[, input$factorTable_rows_selected], Numerics[, input$numericTable_rows_selected])
         factorName <- colnames(Factors)[input$factorTable_rows_selected]
         varName <- colnames(Numerics)[input$numericTable_rows_selected]
         colnames(testdf) <- c(factorName, varName)
 
-        ggplot2::ggplot(data = testdf, ggplot2::aes(x = testdf[, factorName], y = testdf[, varName], fill = testdf[, factorName])) +
+        currentPlot$plot <- ggplot2::ggplot(data = testdf, ggplot2::aes(x = testdf[, factorName], y = testdf[, varName], fill = testdf[, factorName])) +
           ggplot2::labs(x = factorName, y = varName) +
           ggplot2::guides(size = "none") +
           ggplot2::theme(text = ggplot2::element_text(family = "serif"), legend.text = ggplot2::element_text(colour = "black", size = 12, face = "bold"),
@@ -200,7 +206,29 @@ univariateServer <- function(id, data, variables) {
           ggplot2::geom_boxplot() +
           ggplot2::geom_jitter(ggplot2::aes(col = testdf[, factorName]), position = ggplot2::position_jitterdodge(jitter.width = 0.5)) +
           ggplot2::theme(axis.text.x = ggplot2::element_blank())
+        currentPlot$plot
       }
+    })
+
+    #...for exporting to R button----
+    exportName <- reactiveValues()
+    observeEvent(input$exportR, {
+      # display a modal dialog with a header, textinput and action buttons
+      showModal(modalDialog(
+        tags$h3('Please enter the name of exported object'),
+        textInput(ns('name'), 'Name'),
+        footer = tagList(
+          actionButton(ns('submit'), 'Submit'),
+          modalButton('cancel')
+        )
+      ))
+    })
+    # only store the information if the user clicks submit
+    observeEvent(input$submit, {
+      removeModal()
+      myPlot <- currentPlot$plot
+      exportName$name <- input$name
+      assign(paste0(exportName$name), myPlot, envir = .GlobalEnv)
     })
 
     #Enable / Disable buttons----
@@ -218,6 +246,18 @@ univariateServer <- function(id, data, variables) {
         }
       }
     })
+    observe({
+      req(currentPlot$plot)
+      if(!is.null(currentPlot$plot))
+      {
+        enable("exportR")
+      }
+      else if(is.null(currentPlot$plot))
+      {
+        disable("exportR")
+      }
+    })
+
 
     #####
     #output$feedback <- shiny::renderText(paste("Debug"))

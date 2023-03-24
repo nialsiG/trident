@@ -196,9 +196,12 @@ variablesServer <- function(id, data) {
         {
           warning("No discriminant variable found; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset")
         }
+        else if (length(Multicheck$is.discriminant[which(Multicheck$is.discriminant == TRUE)]) < 3)
+        {
+          warning("There are less than 3 discriminant variables; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset")
+        }
         else Numerics <- as.data.frame(Numerics[, which(Multicheck$is.discriminant == TRUE)])
       }
-
       #The different modes of rank by
       rankByMethod <- "k.p.value"
       gpPriority <- c(1:length(levels(Factor)))
@@ -214,7 +217,6 @@ variablesServer <- function(id, data) {
       {
         rankByMethod = "lsd.p.value"
       }
-
       if(input$rankBySelect == 3 || input$rankBySelect == 5)
       {
         Mypairs <- utils::combn(levels(as.factor(Factor)), 2, paste, collapse = ' vs. ', simplify = TRUE)
@@ -242,6 +244,13 @@ variablesServer <- function(id, data) {
         showModal(modalDialog(
           title = "Ranking procedure has been stopped",
           "No discriminant variable could be found; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset"
+        ))
+      }
+      else if (input$removeNonDisc && length(Multicheck$is.discriminant[which(Multicheck$is.discriminant == TRUE)]) < 3)
+      {
+        showModal(modalDialog(
+          title = "Ranking procedure has been stopped",
+          "There are less than 3 discriminant variables; please uncheck the box 'Remove non-discriminant variables' or try with a new dataset"
         ))
       }
       else
@@ -338,9 +347,24 @@ variablesServer <- function(id, data) {
     )
 
     #...for exporting to R button----
+    exportName <- reactiveValues()
     observeEvent(input$exportR, {
-      Mydf <- data.frame(v$data)
-      assign(paste0(testName <- "variablesTrident"), Mydf, envir = .GlobalEnv)
+      # display a modal dialog with a header, textinput and action buttons
+      showModal(modalDialog(
+        tags$h3('Please enter the name of exported object'),
+        textInput(ns('name'), 'Name'),
+        footer = tagList(
+          actionButton(ns('submit'), 'Submit'),
+          modalButton('cancel')
+        )
+      ))
+    })
+    # only store the information if the user clicks submit
+    observeEvent(input$submit, {
+      removeModal()
+      myDf <- data.frame(v$data)
+      exportName$name <- input$name
+      assign(paste0(exportName$name), myDf, envir = .GlobalEnv)
     })
 
     #Enable / Disable buttons----

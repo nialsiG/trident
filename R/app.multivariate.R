@@ -51,6 +51,11 @@ multivariateUI <- function(id) {
               id = ns("bivariate"),
               div(tags$img(src = "www/pca.png", height = "40px"), " Bivariate Graph"),
               class = "btn action-button")),
+            #...to export table into R
+            disabled(tags$button(
+              id = ns("exportR"),
+              div(tags$img(src = "www/export.png", height = "40px"), "Export to R"),
+              class = "btn action-button")),
             #...Checkboxes
             #NOTE: currently the behavior of ellipses and convex hulls is unstable, it was deactivated
             #checkboxInput(ns("IsEllipse"), "Add ellipses?", FALSE),
@@ -156,7 +161,7 @@ multivariateServer <- function(id, data, variables) {
     acpResults <- reactiveValues(data = NULL)
 
     #...Reactive values for choosing the type of graph output
-    v <- reactiveValues(plot = "screenplot")
+    currentPlot <- reactiveValues(plotType = "screenplot", plot = NULL)
 
     #Tables----
     #...Table to select variables
@@ -183,17 +188,17 @@ multivariateServer <- function(id, data, variables) {
     #Buttons----
     #...for changing to screenplot
     observeEvent(input$screenplot, {
-      v$plot <- "screenplot"
+      currentPlot$plotType <- "screenplot"
     })
 
     #...for changing to correlation circle
     observeEvent(input$corcircle, {
-      v$plot <- "corcircle"
+      currentPlot$plotType <- "corcircle"
     })
 
     #...for changing to bivariate graph
     observeEvent(input$bivariate, {
-      v$plot <- "bivariate"
+      currentPlot$plotType <- "bivariate"
     })
 
     #...for adding individuals
@@ -205,8 +210,6 @@ multivariateServer <- function(id, data, variables) {
       Mydf <- data.frame(Mydf, stringsAsFactors = TRUE)
       Mydf <- Mydf[!is.infinite(base::rowSums(dplyr::select_if(Mydf, is.numeric))), ]
       Mydf <- stats::na.omit(Mydf)
-      #Numerics <- dplyr::select_if(Mydf, is.numeric)
-      #Factors  <- dplyr::select_if(Mydf, is.character)
       suppIndividuals$value <- data.frame(Mydf)
     })
 
@@ -346,12 +349,13 @@ multivariateServer <- function(id, data, variables) {
       PLOT.COLORS = rep(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 3) #24 levels max
       PLOT.PCH = c(1, 15:18, 9:10, 18:15, 10:8, 11:14, 2:7)
 
-      if(v$plot == "screenplot" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
-        factoextra::fviz_eig(acpResults$data, addlabels = TRUE, ylim = c(0, max(acpResults$data$eig[, 2])), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
+      if(currentPlot$plotType == "screenplot" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
+        currentPlot$plot <- factoextra::fviz_eig(acpResults$data, addlabels = TRUE, ylim = c(0, max(acpResults$data$eig[, 2])), barfill = "lightgoldenrod", barcolor = "lightgoldenrod3")
+        currentPlot$plot
       }
 
-      else if(v$plot == "bivariate" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
-        factoextra::fviz_pca_ind(
+      else if(currentPlot$plotType == "bivariate" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
+        currentPlot$plot <- factoextra::fviz_pca_ind(
           acpResults$data, axes = c(pcX, pcY),
           geom = c("point", "text"),
           repel = FALSE,
@@ -379,10 +383,11 @@ multivariateServer <- function(id, data, variables) {
           ggplot2::scale_shape_manual(name = myFactor, labels = levels(as.factor(Factors[, myFactor])), values = PLOT.PCH) +
           ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2))) +
           ggplot2::labs(title = NULL)
+        currentPlot$plot
       }
 
-      else if(v$plot == "corcircle" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
-        factoextra::fviz_pca_var(acpResults$data,
+      else if(currentPlot$plotType == "corcircle" & length(input$factorTable_rows_selected) == 1 & length(input$numericTable_rows_selected) > 1) {
+        currentPlot$plot <- factoextra::fviz_pca_var(acpResults$data,
                                  axes = c(pcX, pcY),
                                  repel = TRUE,
                                  col.var = "steelblue",
@@ -402,6 +407,7 @@ multivariateServer <- function(id, data, variables) {
                          axis.title.x = ggplot2::element_text(size = 14, angle = 00, face = "plain"),
                          axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
           ggplot2::labs(title = NULL)
+        currentPlot$plot
       }
     })
 
@@ -461,6 +467,27 @@ multivariateServer <- function(id, data, variables) {
       contentType = "text/txt"
     )
 
+    #...for exporting to R button----
+    exportName <- reactiveValues()
+    observeEvent(input$exportR, {
+      # display a modal dialog with a header, textinput and action buttons
+      showModal(modalDialog(
+        tags$h3('Please enter the name of exported object'),
+        textInput(ns('name'), 'Name'),
+        footer = tagList(
+          actionButton(ns('submit'), 'Submit'),
+          modalButton('cancel')
+        )
+      ))
+    })
+    # only store the information if the user clicks submit
+    observeEvent(input$submit, {
+      removeModal()
+      myPlot <- currentPlot$plot
+      exportName$name <- input$name
+      assign(paste0(exportName$name), myPlot, envir = .GlobalEnv)
+    })
+
     #Enable / Disable buttons----
     observe({
       req(acpResults)
@@ -481,6 +508,18 @@ multivariateServer <- function(id, data, variables) {
           disable("addIndividuals")
           disable("savePCA")
         }
+      }
+    })
+
+    observe({
+      req(currentPlot$plot)
+      if(!is.null(currentPlot$plot))
+      {
+        enable("exportR")
+      }
+      else if(is.null(currentPlot$plot))
+      {
+        disable("exportR")
       }
     })
 

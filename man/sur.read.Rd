@@ -7,9 +7,9 @@
 sur.read(sur, type = "xyz")
 }
 \arguments{
-\item{sur}{surface file}
+\item{sur}{A surface file of the .SUR file format}
 
-\item{type}{character vector indicating the desired output format - either a matrix of heights, or a data.frame with x, y and z as columns}
+\item{type}{A character vector indicating the desired output format - either a matrix of heights, or a data.frame with x, y and z as columns}
 }
 \value{
 A data frame or a matrix of the 3d coordinates of the surface

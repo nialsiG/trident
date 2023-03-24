@@ -47,13 +47,15 @@ datasetUI <- function(id) {
 #SERVER----
 datasetServer <- function(id) {
   moduleServer(id, function(input, output, session) {
+    ns <- session$ns
 
     #Help in a verbatim text----
     output$text <- renderText({
       Mydf <- dataTrident$value
       Mydf <- unclass(Mydf)
       Mydf <- data.frame(Mydf, stringsAsFactors = TRUE)
-      if (!is.null(input$file1)) {
+      if(v$isComputing) return('Wait, computation in progress...')
+      else if (!is.null(input$file1)) {
         if (is.null(input$dataset_columns_selected)) return('You must select a variable as factor')
         if (!is.null(input$dataset_columns_selected)){
           if (!is.factor(Mydf[, input$dataset_columns_selected + 1])) return(paste0('Column ', input$dataset_columns_selected + 1,': Selected variable is not a factor'))
@@ -103,15 +105,35 @@ datasetServer <- function(id) {
     )
 
     #...for exporting to R button----
+    exportName <- reactiveValues()
     observeEvent(input$exportR, {
-      Mydf <- dataTrident$value
-      Mydf <- unclass(Mydf)
-      Mydf <- data.frame(Mydf, stringsAsFactors = TRUE)
-      assign(paste0(testName <- "datasetTrident"), Mydf, envir = .GlobalEnv)
+      # display a modal dialog with a header, textinput and action buttons
+      showModal(modalDialog(
+        tags$h3('Please enter the name of exported object'),
+        textInput(ns('name'), 'Name'),
+        footer = tagList(
+          actionButton(ns('submit'), 'Submit'),
+          modalButton('cancel')
+        )
+      ))
     })
+    # only store the information if the user clicks submit
+    observeEvent(input$submit, {
+      removeModal()
+      myDf <- dataTrident$value
+      myDf <- unclass(myDf)
+      myDf <- data.frame(myDf, stringsAsFactors = TRUE)
+      exportName$name <- input$name
+      assign(paste0(exportName$name), myDf, envir = .GlobalEnv)
+    })
+
+
+    #...Reactive value for computing state
+    v <- reactiveValues(isComputing = FALSE)
 
     #...for BoxCox transformation
     observeEvent(input$boxCoxTransform, {
+      v$isComputing <- TRUE
       Mydf <- dataTrident$value
       Factors <- dplyr::select_if(Mydf, is.character)
       Numerics <- dplyr::select_if(Mydf, is.numeric)
@@ -119,10 +141,13 @@ datasetServer <- function(id) {
       myBoxcox <- trident::trident.boxcox(df = Numerics, y = factor(Mydf[, input$dataset_columns_selected + 1]))
       colnames(myBoxcox$boxcox) <- paste(colnames(myBoxcox$boxcox), "boxcox", sep = ".")
       dataTrident$value <- data.frame(Factors, myBoxcox$boxcox)
+      #End
+      v$isComputing <- FALSE
     })
 
     #...for log transformation
     observeEvent(input$logTransform, {
+      v$isComputing <- TRUE
       Mydf <- dataTrident$value
       Factors <- dplyr::select_if(Mydf, is.character)
       Numerics <- dplyr::select_if(Mydf, is.numeric)
@@ -138,9 +163,10 @@ datasetServer <- function(id) {
       {
         Numerics <- Numerics[ , colSums(is.na(Numerics)) == 0]
       }
-
       colnames(Numerics) <- paste(colnames(Numerics), "log10", sep = ".")
       dataTrident$value <- data.frame(Factors, Numerics)
+      #End
+      v$isComputing <- FALSE
     })
 
     #Table----
