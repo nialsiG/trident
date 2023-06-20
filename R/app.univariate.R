@@ -202,7 +202,7 @@ univariateServer <- function(id, data, variables) {
                          axis.title.y = ggplot2::element_text(size = 14, angle = 90, face = "plain")) +
           ggplot2::guides(colour = ggplot2::guide_legend(override.aes = list(size = 2))) +
           ggplot2::scale_color_manual(name = factorName, labels = levels(as.factor(testdf[, factorName])), values = PLOT.COLORS) +
-          ggplot2::scale_fill_manual(name = factorName, labels = levels(as.factor(testdf[, factorName])), values = colorspace::lighten(PLOT.COLORS, amount = 0.5)) +
+          ggplot2::scale_fill_manual(name = factorName, labels = levels(as.factor(testdf[, factorName])), values = colorspace::lighten(PLOT.COLORS, amount = 0.7)) +
           ggplot2::geom_boxplot() +
           ggplot2::geom_jitter(ggplot2::aes(col = testdf[, factorName]), position = ggplot2::position_jitterdodge(jitter.width = 0.5)) +
           ggplot2::theme(axis.text.x = ggplot2::element_blank())

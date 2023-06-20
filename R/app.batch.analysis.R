@@ -110,7 +110,6 @@ batchAnalysisUI <- function(id) {
              uiOutput(ns("suffixFactor5")),
       )
     ),
-    hr(),
     #Buttons (2/2)
     fluidRow(
       #...for launching the batch analysis
