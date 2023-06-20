@@ -1,10 +1,11 @@
 Package: trident
 Type: Package
 Title: Dental Microwear Texture Analysis
-Version: 1.3.7
+Version: 1.3.8
 Authors@R: c(
     person(given = "Ghislain", family = "Thiery", role = c("aut", "cre"), email = "ghislain.thiery@ntymail.com"),
     person(given = "Arthur", family = "Francisco", role = c("aut"), email = "arthur.francisco@univ-poitiers.fr"),
+    person(given = "Margot", family = "Louail", role = c("aut"), email = "margot.louail@univ-poitiers.fr"),
     person(given = "Gildas", family = "Merceron", role = c("aut"), email = "gildas.merceron@univ-poitiers.fr"))
 Description: A library for dental microwear texture analysis, allowing to further analyze the results using a variety of methods.
     The package includes function to measure microwear texture, to transform the data, to rank variables, as well as a complete shiny app.
