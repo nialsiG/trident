@@ -9,7 +9,7 @@ It includes functions to measure microwear texture, to transform the data, to ra
 
 2 - Windows users: check that you have a matching version of RTools installed
 
-3 - Open the "InstallTrident.Rproj"
+3 - Open the "InstallTrident.Rproj" in [trident/InstallTrident_1.3.8.zip](InstallTrident_1.3.8.zip)
 
 4 - Install all the dependencies:
 
