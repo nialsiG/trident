@@ -5,7 +5,7 @@ It includes functions to measure microwear texture, to transform the data, to ra
 
 # Installation
 
-1 - Check that you have R > 4.0 and a compatible IDE (such as Rstudio) installed
+1 - Check that you have R > 4.0 and a compatible R Studio version installed
 
 2 - Windows users: check that you have a matching version of RTools installed
 
