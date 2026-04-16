@@ -1,0 +1,65 @@
+Package: trident
+Title: A package for statistical processing of DMTA files
+Version: 2.0.0
+Authors@R: c(
+    person("Arthur", "Francisco", , "arthur.francisco@univ-poitiers.fr", role = c("cre", "aut"),
+           comment = c(ORCID = "https://orcid.org/0000-0002-3962-4959")),
+    person("Ghislain", "Thiery", , "ghislain.thiery@ntymail.com", role = "aut",
+           comment = c(ORCID = "https://orcid.org/0000-0003-4789-7372")),
+    person("Margot", "Louail", , "margot.louail@univ-poitiers.fr", role = "aut",
+           comment = c(ORCID = "https://orcid.org/0000-0002-9927-4508")),
+    person("Gildas", "Merceron", , "gildas.merceron@univ-poitiers.fr", role = "aut",
+           comment = c(ORCID = "https://orcid.org/0000-0001-5777-7126"))
+  )
+Description: A library for dental microwear texture analysis, allowing to
+    further analyze the results using a variety of methods.  The package
+    includes function to measure microwear texture, to transform the data,
+    to rank variables, as well as a complete shiny app.
+License: GPL-3
+Depends: 
+    R (>= 4.5.0)
+Imports: 
+    car,
+    colorspace,
+    config,
+    DescTools,
+    doSNOW,
+    dplyr,
+    DT,
+    factoextra,
+    FactoMineR,
+    foreach,
+    ggplot2,
+    ggrepel,
+    glue,
+    golem,
+    MASS,
+    nortest,
+    parallel,
+    picante,
+    plyr,
+    RColorBrewer,
+    shiny,
+    shinyFiles,
+    shinyjs,
+    snow,
+    stats,
+    stringr,
+    tidyr,
+    utils,
+    withr
+Suggests: 
+    knitr,
+    pkgload,
+    purrr,
+    rmarkdown,
+    spelling,
+    testthat (>= 3.0.0)
+VignetteBuilder: 
+    knitr
+Config/fusen/version: 0.7.2
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+LazyData: true
+RoxygenNote: 7.3.3
