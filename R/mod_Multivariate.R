@@ -18,7 +18,9 @@
 #'
 #' @noRd
 #'
+#' @importFrom shinyjs enable disabled disable toggleState
 #' @importFrom shiny NS tagList
+#'
 mod_Multivariate_ui <- function(id) {
   ns <- NS(id)
 
@@ -94,7 +96,7 @@ mod_Multivariate_ui <- function(id) {
               ),
               hr(),
               #Graph output
-              plotOutput(ns("plot"), height = 400, width = 400)
+              plotOutput(ns("plot"), height = 400)#, width = 400)
           )
       ),
 

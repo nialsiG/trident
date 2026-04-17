@@ -215,6 +215,13 @@ mod_Variables_server <- function(id, data){
             df       <- cleanData()
             Numerics <- getNumeric(df)
             Factor   <- getFactor(df, input$factorTable_rows_selected)
+
+            cols     <- Numerics %>%
+                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                names() # exclude 0 variance columns
+
+            Numerics <- Numerics[cols]
+
             v$data   <- data.frame(multicheck(df = Numerics, y = Factor))
         }, status = v$isComputing)
 
@@ -234,6 +241,12 @@ mod_Variables_server <- function(id, data){
             df       <- cleanData()
             Numerics <- getNumeric(df)
             Factor   <- getFactor(df, input$factorTable_rows_selected)
+
+            cols     <- Numerics %>%
+                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                names() # exclude 0 variance columns
+
+            Numerics <- Numerics[cols]
 
             if (input$removeNonDisc) {
 
@@ -300,6 +313,13 @@ mod_Variables_server <- function(id, data){
             df       <- cleanData()
             Numerics <- getNumeric(df)
             Factor   <- getFactor(df, input$factorTable_rows_selected)
+
+            cols     <- Numerics %>%
+                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                names() # exclude 0 variance columns
+
+            Numerics <- Numerics[cols]
+
             Mytop    <- trident.top3(df = Numerics, y = Factor)
 
             if (is.null(Mytop)) {

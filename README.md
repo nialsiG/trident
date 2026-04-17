@@ -11,9 +11,35 @@ stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://
 
 ## Installation
 
-You can install the development version of `{trident}` like so:
+You can install `{trident}` in a safe, isolated environment using
+`{renv}`:
 
-… To complete
+``` r
+dir.create("test-trident")
+setwd("test-trident")
+
+install.packages("renv")
+renv::init()
+```
+
+It is recommended to create a new empty RStudio Project for this folder.
+Once the project is created, verify that it is correctly linked to the
+isolated environment
+
+``` r
+.libPaths()
+```
+
+This should return a project-specific (local) library path rather than
+your global R library.
+
+------------------------------------------------------------------------
+
+You can then install `{trident}` from the provided archive:
+
+``` r
+renv::install("path/to/trident_2.0.0.zip")
+```
 
 ## Run
 
@@ -31,7 +57,7 @@ This README has been compiled on the
 
 ``` r
 Sys.time()
-#> [1] "2026-04-16 15:01:45 CEST"
+#> [1] "2026-04-17 14:45:19 CEST"
 ```
 
 Here are the tests results and package coverage:
@@ -39,16 +65,8 @@ Here are the tests results and package coverage:
 ``` r
 devtools::check(quiet = TRUE)
 #> ℹ Loading trident
-#> Warning: remplacement de l'importation précédente 'shiny::runExample' par
-#> 'shinyjs::runExample' lors du chargement de 'trident'
-#> 
-#> Attachement du package : 'shinyjs'
-#> 
-#> Les objets suivants sont masqués depuis 'package:methods':
-#> 
-#>     removeClass, show
 #> ── R CMD check results ────────────────────────────────────── trident 2.0.0 ────
-#> Duration: 5m 35.8s
+#> Duration: 5m 56.5s
 #> 
 #> ❯ checking for executable files ... WARNING
 #>   Found the following executable file:
@@ -59,12 +77,19 @@ devtools::check(quiet = TRUE)
 #> ❯ checking for future file timestamps ... NOTE
 #>   unable to verify current time
 #> 
-#> ❯ checking top-level files ... NOTE
-#>   File
-#>     LICENSE
-#>   is not mentioned in the DESCRIPTION file.
+#> ❯ checking dependencies in R code ... NOTE
+#>   Dépendance d'espace de nom dans le champ Imports non importé depuis : 'pkgload'
+#>     All declared Imports should be used.
 #> 
 #> ❯ checking R code for possible problems ... NOTE
+#>   mod_Variables_server : <anonymous> : <anonymous>: no visible global
+#>     function definition for 'var'
+#>   Undefined global functions or variables:
+#>     var
+#>   Consider adding
+#>     importFrom("stats", "var")
+#>   to your NAMESPACE file.
+#>   
 #>   Found the following assignments to the global environment:
 #>   Fichier 'trident/R/mod_BatchAnalysis.R' :
 #>     assign(input$name, data.frame(batchData$data), envir = .GlobalEnv)
@@ -84,7 +109,7 @@ devtools::check(quiet = TRUE)
 
 ``` r
 covr::package_coverage()
-#> trident Coverage: 35.27%
+#> trident Coverage: 35.03%
 #> R/app_config.R: 0.00%
 #> R/app_server.R: 0.00%
 #> R/app_ui.R: 0.00%
@@ -97,7 +122,7 @@ covr::package_coverage()
 #> R/mod_Variables.R: 0.00%
 #> R/run_app.R: 0.00%
 #> R/utils.R: 9.68%
-#> R/graphics.R: 93.85%
+#> R/graphics.R: 93.82%
 #> R/statistics.R: 94.12%
 #> R/analyses.R: 95.57%
 ```

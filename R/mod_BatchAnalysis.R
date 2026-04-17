@@ -17,6 +17,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @importFrom shinyjs enable disabled disable toggleState
 
 mod_BatchAnalysis_ui <- function(id) {
   ns <- NS(id)

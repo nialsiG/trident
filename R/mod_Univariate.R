@@ -18,6 +18,8 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @importFrom shinyjs enable disabled disable toggleState
+#'
 mod_Univariate_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -260,6 +262,8 @@ mod_Univariate_server <- function(id, data, variables){
             }
         }
     })
+
+
     observe({
         req(currentPlot$plot)
         if(!is.null(currentPlot$plot))

@@ -139,9 +139,9 @@ plot_bivariate <- function(pca_result, factors, factor_col, pc_x = 1, pc_y = 2) 
       panel.grid      = ggplot2::element_blank(),
       axis.line       = ggplot2::element_line(color = "black"),
       legend.position = "right"
-    ) +
+    ) #+
     
-    ggplot2::coord_equal()
+    #ggplot2::coord_equal()
 }
 
 

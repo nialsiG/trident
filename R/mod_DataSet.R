@@ -17,8 +17,8 @@
 #'
 #' @noRd
 #'
-#@importFrom shiny NS tagList
-#' @import shiny shinyjs shinyFiles dplyr
+#' @importFrom shinyjs enable disabled disable toggleState
+#' @import shiny shinyFiles dplyr
 #'
 mod_DataSet_ui <- function(id) {
   ns <- NS(id)
@@ -179,6 +179,8 @@ mod_DataSet_server <- function(id){
     #...for BoxCox transformation
     observeEvent(input$boxCoxTransform, {
 
+        req(dataTrident$value)
+
         v$isComputing <- TRUE
         Mydf          <- dataTrident$value
         Factors       <- dplyr::select_if(Mydf, is.factor)
@@ -201,9 +203,10 @@ mod_DataSet_server <- function(id){
         req(dataTrident$value)
 
         v$isComputing <- TRUE
+        Mydf          <- dataTrident$value
 
         # separate factors and numerics, and apply log transformation only to numeric columns
-        new_df <- dataTrident$value %>%
+        new_df <- Mydf %>%
             dplyr::mutate(dplyr::across(where(is.numeric), ~ {
 
                 val <- . - min(., na.rm = TRUE) + 1 # x - min + 1

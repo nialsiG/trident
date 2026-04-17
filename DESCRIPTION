@@ -37,6 +37,7 @@ Imports:
     nortest,
     parallel,
     picante,
+    pkgload,
     plyr,
     RColorBrewer,
     shiny,
@@ -50,7 +51,6 @@ Imports:
     withr
 Suggests: 
     knitr,
-    pkgload,
     purrr,
     rmarkdown,
     spelling,
