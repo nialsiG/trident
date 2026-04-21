@@ -6,11 +6,16 @@ test_that("polynom.sur works", {
   
   sur <- system.file("tests/sur/test_surf.sur", package = "trident")
   
-  out <- system.file("tests/sur/test_surf_X1_008_Y1_008.sur", package = "trident")
+  out <- file.path(tmp, "test_surf.sur")
   
+  file.copy(from = sur, to = out)
+
+  sur <- out
+  out <- file.path(tmp, "test_surf_X1_001_Y1_001.sur")
+
   if (file.exists(out)) file.remove(out)
   
-  ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 8, path = TRUE)
+  ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 1, path = TRUE)
   
   expect_true(file.exists(out))
   

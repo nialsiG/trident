@@ -188,8 +188,8 @@ dmta.asfc <- function(sur, TmpDir, size.x = 256, size.y = 256, size.n = 256, typ
 
   NameSur <- unlist(strsplit(utils::tail(unlist(strsplit(sur, "\\\\")), 1), ".sur"))
 
-  PrgPath <- system.file("extdata", "structure", "prg", "prg.exe", package = "trident")
-  if (PrgPath == "") {PrgPath = "inst/extdata/structure/prg/prg.exe"}
+  PrgPath <- trident::trident_program()[1]
+  PrgRun  <- trident::trident_program()[2]
   
   file.copy(from = PrgPath, to = Tmp)
 
@@ -244,7 +244,7 @@ FIN_____
 
   #4-Run the script
   
-  system2(command = file.path(Tmp, "prg.exe"), args = file.path(Tmp, "complex_analysis.f90"), stdout = TRUE)
+  system2(command = file.path(Tmp, PrgRun), args = file.path(Tmp, "complex_analysis.f90"), stdout = TRUE)
 
 
   #5-Scan and return the results
@@ -304,8 +304,8 @@ dmta.height <- function(sur, TmpDir, size.x = 256, size.y = 256, size.n = 256, t
 
   NameSur <- unlist(strsplit(utils::tail(unlist(strsplit(sur, "\\\\")), 1), ".sur"))
 
-  PrgPath <- system.file("extdata", "structure", "prg", "prg.exe", package = "trident")
-  if (PrgPath == "") {PrgPath = "inst/extdata/structure/prg/prg.exe"}
+  PrgPath <- trident::trident_program()[1]
+  PrgRun  <- trident::trident_program()[2]
   
   file.copy(from = PrgPath, to = Tmp)
 
@@ -376,7 +376,7 @@ FIN_____
 
   #4-Run the script
   
-  system2(command = file.path(Tmp, "prg.exe"), args = file.path(Tmp, "height_analysis.f90"), stdout = TRUE)
+  system2(command = file.path(Tmp, PrgRun), args = file.path(Tmp, "height_analysis.f90"), stdout = TRUE)
 
 
   #5-Scan and return the results
@@ -444,8 +444,8 @@ dmta.spatial <- function(sur, TmpDir, size.x = 256, size.y = 256, size.n = 256, 
 
   NameSur <- unlist(strsplit(utils::tail(unlist(strsplit(sur, "\\\\")), 1), ".sur"))
 
-  PrgPath <- system.file("extdata", "structure", "prg", "prg.exe", package = "trident")
-  if (PrgPath == "") {PrgPath = "inst/extdata/structure/prg/prg.exe"}
+  PrgPath <- trident::trident_program()[1]
+  PrgRun  <- trident::trident_program()[2]
   
   file.copy(from = PrgPath, to = Tmp)
 
@@ -500,7 +500,7 @@ FIN_____
 
   #4-Run the script
   
-  system2(command = file.path(Tmp, "prg.exe"), args = file.path(Tmp, "spatial_analysis.f90"), stdout = TRUE)
+  system2(command = file.path(Tmp, PrgRun), args = file.path(Tmp, "spatial_analysis.f90"), stdout = TRUE)
 
 
   #5-Scan and return the results
@@ -567,8 +567,8 @@ dmta.topology <- function(sur, TmpDir, size.x = 256, size.y = 256, size.n = 256,
 
   NameSur <- unlist(strsplit(utils::tail(unlist(strsplit(sur, "\\\\")), 1), ".sur"))
 
-  PrgPath <- system.file("extdata", "structure", "prg", "prg.exe", package = "trident")
-  if (PrgPath == "") {PrgPath = "inst/extdata/structure/prg/prg.exe"}
+  PrgPath <- trident::trident_program()[1]
+  PrgRun  <- trident::trident_program()[2]
   
   file.copy(from = PrgPath, to = Tmp)
 
@@ -638,7 +638,7 @@ FIN_____
 
   #4-Run the script
   
-  system2(command = file.path(Tmp, "prg.exe"), args = file.path(Tmp, "topology_analysis.f90"), stdout = TRUE)
+  system2(command = file.path(Tmp, PrgRun), args = file.path(Tmp, "topology_analysis.f90"), stdout = TRUE)
 
 
   #5-Scan and return the results
@@ -682,9 +682,16 @@ print(Scanned2)
 #' @export
 #' @examples
 #' tmp <- tempdir()
+#'
 #' sur <- system.file("tests/sur/test_surf.sur", package = "trident")
 #'
-#' ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 8, path = TRUE)
+#' out <- file.path(tmp, "test_surf.sur")
+#'
+#' file.copy(from = sur, to = out)
+#'
+#' sur <- out
+#'
+#' ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 1, path = TRUE)
 polynom.sur <- function(sur, TmpDir, deg = 8, path = TRUE) {
 
   # Preparation: move files to tmp
@@ -693,8 +700,8 @@ polynom.sur <- function(sur, TmpDir, deg = 8, path = TRUE) {
 
   NameSur <- unlist(strsplit(utils::tail(unlist(strsplit(sur, "\\\\")), 1), ".sur"))
 
-  PrgPath <- system.file("extdata", "structure", "prg", "prg.exe", package = "trident")
-  if (PrgPath == "") {PrgPath = "inst/extdata/structure/prg/prg.exe"}
+  PrgPath <- trident::trident_program()[1]
+  PrgRun  <- trident::trident_program()[2]
   
   file.copy(from = PrgPath, to = Tmp)
 
@@ -729,7 +736,7 @@ FIN_____
   utils::write.table(Myscript, file = file.path(Tmp, "polynom.f90"), quote = FALSE, row.names = FALSE, col.names = FALSE)
 
   # Run the script
-  system2(command = file.path(Tmp, "prg.exe"), args = file.path(Tmp, "polynom.f90"), stdout = TRUE)
+  system2(command = file.path(Tmp, PrgRun), args = file.path(Tmp, "polynom.f90"), stdout = TRUE)
 
   # ...return path
   if (path){

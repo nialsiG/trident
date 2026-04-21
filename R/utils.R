@@ -32,7 +32,7 @@ exp_form <- function(){
    return( c("function(row, data) {",
              "for (i = 1; i < data.length; i++) {",
              "if (data[i] !== null && typeof data[i] == 'number') {",
-             "$('td:eq(' + i + ')', row).html(data[i].toExponential(3));",
+             "$('td:eq(' + i + ')', row).html(data[i].toExponential(2));",
              "}",
              "}",
              "}"
@@ -121,6 +121,56 @@ safeCompute <- function(expr, status) {
             ))
         }
     )
+}
+
+#' trident_program
+#' @title trident_program
+#' @description
+#' Returns the file path to the Trident program executable bundled within the
+#' package, depending on the operating system (Windows or Linux).
+#' If the executable cannot be found via \code{system.file()}, a fallback path
+#' within the package structure is used.
+#' @return
+#' A character string giving the path to the Trident executable file, and the
+#' executable file.
+#' @details
+#' On Windows, the function looks for \code{prg.exe}, while on Linux it looks for
+#' the \code{main} executable. The function first attempts to locate the file in
+#' the installed package directory using \code{system.file()}, and falls back to
+#' a relative path if needed.
+#' @export
+#' 
+trident_program <- function() {
+
+  OSSYSTEM  <- Sys.info()["sysname"]
+
+   if (OSSYSTEM == "Windows"){
+
+      PrgPath <- system.file("extdata", "structure", "prg", package = "trident")
+      
+      if (PrgPath == "") {
+         PrgPath <- "inst/extdata/structure/prg/prg.exe"
+      } else {
+         PrgPath <- paste0(PrgPath, "/prg.exe")
+      }
+
+      run <- "prg.exe"
+
+   } else if (OSSYSTEM == "Linux") {
+
+      PrgPath <- system.file("extdata", "structure", "prg", package = "trident")
+      
+      if (PrgPath == "") {
+         PrgPath <- "inst/extdata/structure/prg/main"
+      } else {
+         PrgPath <- paste0(PrgPath, "/main")
+      }
+
+      run <- "main"
+
+   }
+
+   return(c(PrgPath, run))
 }
 
 #' @title Utils functions

@@ -18,7 +18,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @importFrom shinyjs enable disabled disable toggleState
-
+#'
 mod_BatchAnalysis_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -151,10 +151,55 @@ mod_BatchAnalysis_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+
+    # Check for fortran executable presence
+    OSSYSTEM  <- Sys.info()["sysname"]
+
+    if (OSSYSTEM == "Windows"){
+
+      PrgPath <- system.file("extdata", "structure", "prg", package = "trident")
+
+      if (PrgPath == "") {
+        PrgPath <- "inst/extdata/structure/prg/prg.exe"
+      } else {
+        PrgPath <- paste0(PrgPath, "/prg.exe")
+      }
+
+      if ( !file.exists(PrgPath) ) {
+
+        utils::download.file(url = "https://github.com/TRIBO-Pprime/TRIDENT_V1/raw/refs/heads/master/prg.exe", destfile = PrgPath, mode = "wb")
+
+      }
+
+      run <- "prg.exe"
+
+    } else if (OSSYSTEM == "Linux") {
+
+      PrgPath <- system.file("extdata", "structure", "prg", package = "trident")
+
+      if (PrgPath == "") {
+        PrgPath <- "inst/extdata/structure/prg/main"
+      } else {
+        PrgPath <- paste0(PrgPath, "/main")
+      }
+
+      if ( !file.exists(PrgPath) ) {
+
+        utils::download.file(url = "https://github.com/TRIBO-Pprime/TRIDENT_V1/raw/refs/heads/master/main", destfile = PrgPath, mode = "wb")
+        Sys.chmod(PrgPath, mode = "0755")
+
+      }
+
+      run <- "main"
+
+    }
+
     # ShinyFiles setup
     volumes = getVolumes()
     shinyFiles::shinyFileChoose(input, "surFiles", roots = volumes,
                                 session = session, filetypes = c("sur", "SUR"))
+
+    EXP_DT <- exp_form()
 
     #Help in the text console----
     output$console <- renderText({textConsole$text})
@@ -282,9 +327,10 @@ mod_BatchAnalysis_server <- function(id){
                     extensions = c("FixedColumns"),
                     selection = list(target = "column"),
                     options = list(
-                        fixedColumns = list(leftColumns = length(Factors))
+                        fixedColumns = list(leftColumns = length(Factors)),
+                        rowCallback  = DT::JS(EXP_DT)
+                        )
                     )
-      )
     })
 
     #Buttons----

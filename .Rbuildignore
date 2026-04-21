@@ -9,3 +9,4 @@ $run_dev.*
 ^README\.Rmd$
 ^CODE_OF_CONDUCT\.md$
 ^TRIDENT_V1\.Rproj$
+^Trident_gui_v1\.Rproj$

@@ -217,7 +217,7 @@ mod_Variables_server <- function(id, data){
             Factor   <- getFactor(df, input$factorTable_rows_selected)
 
             cols     <- Numerics %>%
-                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                dplyr::select(dplyr::where(\(x) stats::var(x, na.rm = TRUE) > 0)) %>%
                 names() # exclude 0 variance columns
 
             Numerics <- Numerics[cols]
@@ -243,7 +243,7 @@ mod_Variables_server <- function(id, data){
             Factor   <- getFactor(df, input$factorTable_rows_selected)
 
             cols     <- Numerics %>%
-                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                dplyr::select(dplyr::where(\(x) stats::var(x, na.rm = TRUE) > 0)) %>%
                 names() # exclude 0 variance columns
 
             Numerics <- Numerics[cols]
@@ -315,7 +315,7 @@ mod_Variables_server <- function(id, data){
             Factor   <- getFactor(df, input$factorTable_rows_selected)
 
             cols     <- Numerics %>%
-                dplyr::select(dplyr::where(\(x) var(x, na.rm = TRUE) > 0)) %>%
+                dplyr::select(dplyr::where(\(x) stats::var(x, na.rm = TRUE) > 0)) %>%
                 names() # exclude 0 variance columns
 
             Numerics <- Numerics[cols]

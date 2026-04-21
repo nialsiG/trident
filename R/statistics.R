@@ -135,15 +135,7 @@ multicheck <- function(df, y, alpha = 0.05) {
     i        = seq_len(n_vars),
     .combine = "c"
   ) %dopar% {
-    # skw <- DescTools::Skew(
-    #   x          = residuals_mat[i, ],
-    #   method     = 3,
-    #   conf.level = 0.95,
-    #   ci.type    = "bca",
-    #   R          = 1000
-    # )
-    # abs(skw[[1]] / (skw[[3]] - skw[[2]]))
-    
+
   withr::with_seed(12, { # to ensure reproducibility of the bootstrap results, which can vary across runs due to random resampling. Setting a seed allows for consistent results when the function is run multiple times.
     skw <- DescTools::Skew(
       x          = residuals_mat[i, ],

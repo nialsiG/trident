@@ -26,7 +26,14 @@ polynom.sur
 }
 \examples{
 tmp <- tempdir()
+
 sur <- system.file("tests/sur/test_surf.sur", package = "trident")
 
-ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 8, path = TRUE)
+out <- file.path(tmp, "test_surf.sur")
+
+file.copy(from = sur, to = out)
+
+sur <- out
+
+ResPol <- polynom.sur(sur = sur, TmpDir = tmp, deg = 1, path = TRUE)
 }
